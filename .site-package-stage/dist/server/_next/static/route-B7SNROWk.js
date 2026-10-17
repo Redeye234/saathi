@@ -1,1 +1,0 @@
-import{r as e}from"./local-auth-BClU5CkR.js";var t=`force-dynamic`;async function n(t){return e(t)}export{n as GET,t as dynamic};
