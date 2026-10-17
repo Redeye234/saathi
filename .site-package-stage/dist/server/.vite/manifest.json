@@ -1,0 +1,339 @@
+{
+  "_app-page-cache-finalizer-Dbb0T27U.js": {
+    "file": "_next/static/app-page-cache-finalizer-Dbb0T27U.js",
+    "name": "app-page-cache-finalizer",
+    "imports": [
+      "_isr-cache-Cb22C-1r.js",
+      "_cache-headers-BdD8C-gl.js",
+      "_text-stream-AC1Wi6P3.js",
+      "_record-Crmk5sem.js"
+    ]
+  },
+  "_app-page-stream-0E9qpxd_.js": {
+    "file": "_next/static/app-page-stream-0E9qpxd_.js",
+    "name": "app-page-stream",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js",
+      "_cache-headers-BdD8C-gl.js",
+      "_text-stream-AC1Wi6P3.js",
+      "_record-Crmk5sem.js",
+      "_implicit-tags-a-DDS2DK.js"
+    ]
+  },
+  "_app-prerender-static-params-B1qD0gKS.js": {
+    "file": "_next/static/app-prerender-static-params-B1qD0gKS.js",
+    "name": "app-prerender-static-params",
+    "imports": [
+      "_root-params-0DVgYa50.js"
+    ]
+  },
+  "_app-segment-config-B3tA1dzw.js": {
+    "file": "_next/static/app-segment-config-B3tA1dzw.js",
+    "name": "app-segment-config",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js",
+      "_isr-cache-Cb22C-1r.js",
+      "_cache-headers-BdD8C-gl.js",
+      "_record-Crmk5sem.js",
+      "_root-params-0DVgYa50.js",
+      "_implicit-tags-a-DDS2DK.js"
+    ]
+  },
+  "_cache-headers-BdD8C-gl.js": {
+    "file": "_next/static/cache-headers-BdD8C-gl.js",
+    "name": "cache-headers",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js",
+      "_record-Crmk5sem.js"
+    ]
+  },
+  "_framework~index-C0-sSg6i.js": {
+    "file": "_next/static/framework~index-C0-sSg6i.js",
+    "name": "framework~index",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_framework~index~page~app-route-handler-dispatch-Czyy2-iO.js"
+    ]
+  },
+  "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js": {
+    "file": "_next/static/framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js",
+    "name": "framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js"
+    ]
+  },
+  "_framework~index~page~app-route-handler-dispatch-Czyy2-iO.js": {
+    "file": "_next/static/framework~index~page~app-route-handler-dispatch-Czyy2-iO.js",
+    "name": "framework~index~page~app-route-handler-dispatch",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js"
+    ]
+  },
+  "_google-auth-Cq9Qecvq.js": {
+    "file": "_next/static/google-auth-Cq9Qecvq.js",
+    "name": "google-auth",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js"
+    ]
+  },
+  "_implicit-tags-a-DDS2DK.js": {
+    "file": "_next/static/implicit-tags-a-DDS2DK.js",
+    "name": "implicit-tags",
+    "imports": [
+      "_cache-headers-BdD8C-gl.js"
+    ]
+  },
+  "_isr-cache-Cb22C-1r.js": {
+    "file": "_next/static/isr-cache-Cb22C-1r.js",
+    "name": "isr-cache",
+    "imports": [
+      "_cache-headers-BdD8C-gl.js"
+    ]
+  },
+  "_local-auth-BClU5CkR.js": {
+    "file": "_next/static/local-auth-BClU5CkR.js",
+    "name": "local-auth",
+    "imports": [
+      "_google-auth-Cq9Qecvq.js"
+    ]
+  },
+  "_navigation-runtime-BFUBDh3P.js": {
+    "file": "_next/static/navigation-runtime-BFUBDh3P.js",
+    "name": "navigation-runtime",
+    "imports": [
+      "_cache-headers-BdD8C-gl.js"
+    ]
+  },
+  "_record-Crmk5sem.js": {
+    "file": "_next/static/record-Crmk5sem.js",
+    "name": "record"
+  },
+  "_rolldown-runtime-DUnMT5BP.js": {
+    "file": "_next/static/rolldown-runtime-DUnMT5BP.js",
+    "name": "rolldown-runtime"
+  },
+  "_root-params-0DVgYa50.js": {
+    "file": "_next/static/root-params-0DVgYa50.js",
+    "name": "root-params",
+    "imports": [
+      "_record-Crmk5sem.js"
+    ]
+  },
+  "_rsc-C0u-JDoU.js": {
+    "file": "_next/static/rsc-C0u-JDoU.js",
+    "name": "rsc",
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_framework~index~page~app-route-handler-dispatch-Czyy2-iO.js"
+    ]
+  },
+  "_text-stream-AC1Wi6P3.js": {
+    "file": "_next/static/text-stream-AC1Wi6P3.js",
+    "name": "text-stream",
+    "imports": [
+      "_cache-headers-BdD8C-gl.js",
+      "_record-Crmk5sem.js"
+    ]
+  },
+  "app/api/assistant/route.ts": {
+    "file": "_next/static/route-Bq0-JGAt.js",
+    "name": "route",
+    "src": "app/api/assistant/route.ts",
+    "isDynamicEntry": true
+  },
+  "app/api/auth/login/route.ts": {
+    "file": "_next/static/route-CYqbj1fS.js",
+    "name": "route",
+    "src": "app/api/auth/login/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_local-auth-BClU5CkR.js"
+    ]
+  },
+  "app/api/auth/logout/route.ts": {
+    "file": "_next/static/route-B7SNROWk.js",
+    "name": "route",
+    "src": "app/api/auth/logout/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_local-auth-BClU5CkR.js"
+    ]
+  },
+  "app/api/auth/signup/route.ts": {
+    "file": "_next/static/route-CCu2Y4bg.js",
+    "name": "route",
+    "src": "app/api/auth/signup/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_local-auth-BClU5CkR.js"
+    ]
+  },
+  "app/api/google/callback/route.ts": {
+    "file": "_next/static/route-B5ZMeHSC.js",
+    "name": "route",
+    "src": "app/api/google/callback/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_google-auth-Cq9Qecvq.js"
+    ]
+  },
+  "app/api/google/logout/route.ts": {
+    "file": "_next/static/route-BbE3Vmz1.js",
+    "name": "route",
+    "src": "app/api/google/logout/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_google-auth-Cq9Qecvq.js"
+    ]
+  },
+  "app/api/google/start/route.ts": {
+    "file": "_next/static/route-CmndVms3.js",
+    "name": "route",
+    "src": "app/api/google/start/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_google-auth-Cq9Qecvq.js"
+    ]
+  },
+  "app/api/session/route.ts": {
+    "file": "_next/static/route-PvyQRXeG.js",
+    "name": "route",
+    "src": "app/api/session/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_google-auth-Cq9Qecvq.js",
+      "_local-auth-BClU5CkR.js"
+    ]
+  },
+  "app/api/workspace/route.ts": {
+    "file": "_next/static/route-CvBiTUzh.js",
+    "name": "route",
+    "src": "app/api/workspace/route.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_google-auth-Cq9Qecvq.js",
+      "_local-auth-BClU5CkR.js"
+    ]
+  },
+  "app/page.tsx": {
+    "file": "_next/static/page-BH6Lovk2.js",
+    "name": "page",
+    "src": "app/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rsc-C0u-JDoU.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js"
+    ]
+  },
+  "node_modules/vinext/dist/server/app-page-cache-render.js": {
+    "file": "_next/static/app-page-cache-render-CjWKSxO6.js",
+    "name": "app-page-cache-render",
+    "src": "node_modules/vinext/dist/server/app-page-cache-render.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_cache-headers-BdD8C-gl.js",
+      "_app-page-stream-0E9qpxd_.js",
+      "_text-stream-AC1Wi6P3.js",
+      "_implicit-tags-a-DDS2DK.js"
+    ]
+  },
+  "node_modules/vinext/dist/server/app-page-cache.js": {
+    "file": "_next/static/app-page-cache-DVb7utu6.js",
+    "name": "app-page-cache",
+    "src": "node_modules/vinext/dist/server/app-page-cache.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_navigation-runtime-BFUBDh3P.js",
+      "_isr-cache-Cb22C-1r.js",
+      "_cache-headers-BdD8C-gl.js",
+      "_app-page-cache-finalizer-Dbb0T27U.js",
+      "_text-stream-AC1Wi6P3.js",
+      "_record-Crmk5sem.js"
+    ]
+  },
+  "node_modules/vinext/dist/server/app-prerender-endpoints.js": {
+    "file": "_next/static/app-prerender-endpoints-DzaSaxAB.js",
+    "name": "app-prerender-endpoints",
+    "src": "node_modules/vinext/dist/server/app-prerender-endpoints.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_app-prerender-static-params-B1qD0gKS.js",
+      "_root-params-0DVgYa50.js"
+    ]
+  },
+  "node_modules/vinext/dist/server/app-route-handler-dispatch.js": {
+    "file": "_next/static/app-route-handler-dispatch-BGOUl8Vb.js",
+    "name": "app-route-handler-dispatch",
+    "src": "node_modules/vinext/dist/server/app-route-handler-dispatch.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_rsc-C0u-JDoU.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js",
+      "_navigation-runtime-BFUBDh3P.js",
+      "_isr-cache-Cb22C-1r.js",
+      "_app-segment-config-B3tA1dzw.js",
+      "_cache-headers-BdD8C-gl.js",
+      "node_modules/vinext/dist/server/app-static-generation.js",
+      "_record-Crmk5sem.js",
+      "_root-params-0DVgYa50.js",
+      "_implicit-tags-a-DDS2DK.js"
+    ],
+    "dynamicImports": [
+      "_cache-headers-BdD8C-gl.js"
+    ]
+  },
+  "node_modules/vinext/dist/server/app-static-generation.js": {
+    "file": "_next/static/app-static-generation-GyCp4IQS.js",
+    "name": "app-static-generation",
+    "src": "node_modules/vinext/dist/server/app-static-generation.js",
+    "isDynamicEntry": true
+  },
+  "virtual:cloudflare/worker-entry": {
+    "file": "index.js",
+    "name": "index",
+    "src": "virtual:cloudflare/worker-entry",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-DUnMT5BP.js",
+      "_rsc-C0u-JDoU.js",
+      "_framework~index-C0-sSg6i.js",
+      "_framework~index~layout~page~app-page-cache-render~app-page-cache~app-route-handler-dispatch-euTdYXWf.js",
+      "_isr-cache-Cb22C-1r.js",
+      "_app-segment-config-B3tA1dzw.js",
+      "_cache-headers-BdD8C-gl.js",
+      "_app-page-cache-finalizer-Dbb0T27U.js",
+      "_app-page-stream-0E9qpxd_.js",
+      "_text-stream-AC1Wi6P3.js",
+      "_app-prerender-static-params-B1qD0gKS.js",
+      "_record-Crmk5sem.js",
+      "_root-params-0DVgYa50.js",
+      "_implicit-tags-a-DDS2DK.js"
+    ],
+    "dynamicImports": [
+      "node_modules/vinext/dist/server/app-prerender-endpoints.js",
+      "node_modules/vinext/dist/server/app-static-generation.js",
+      "node_modules/vinext/dist/server/app-page-cache.js",
+      "node_modules/vinext/dist/server/app-page-cache-render.js",
+      "node_modules/vinext/dist/server/app-route-handler-dispatch.js",
+      "app/page.tsx",
+      "virtual:cloudflare/worker-entry",
+      "app/api/assistant/route.ts",
+      "app/api/auth/login/route.ts",
+      "app/api/auth/logout/route.ts",
+      "app/api/auth/signup/route.ts",
+      "app/api/google/callback/route.ts",
+      "app/api/google/logout/route.ts",
+      "app/api/google/start/route.ts",
+      "app/api/session/route.ts",
+      "app/api/workspace/route.ts"
+    ],
+    "css": [
+      "_next/static/css/index.Z9N8L7lM.css"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+import{a as e}from"./google-auth-Cq9Qecvq.js";var t=`force-dynamic`;function n(t){return e(t)}export{n as GET,t as dynamic};
