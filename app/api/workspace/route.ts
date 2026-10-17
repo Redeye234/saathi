@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { getGoogleSession } from "../../../lib/google-auth.mjs";
+import { localSession } from "../../../lib/local-auth.mjs";
 import { getDb } from "../../../db";
 import { workerWorkspaces } from "../../../db/schema";
 
@@ -21,12 +21,12 @@ function errorMessage(error: unknown) {
 }
 
 async function currentUser(request: Request) {
-  return getGoogleSession(request);
+  return localSession(request);
 }
 
 export async function GET(request: Request) {
   const user = await currentUser(request);
-  if (!user) return json({ error: "Sign in with Google to sync your workspace." }, 401);
+  if (!user) return json({ error: "Sign in to sync your workspace." }, 401);
 
   try {
     const db = getDb();
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await currentUser(request);
-  if (!user) return json({ error: "Sign in with Google to sync your workspace." }, 401);
+  if (!user) return json({ error: "Sign in to sync your workspace." }, 401);
   if (!request.headers.get("content-type")?.includes("application/json")) {
     return json({ error: "Send workspace data as JSON." }, 415);
   }
