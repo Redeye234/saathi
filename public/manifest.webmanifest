@@ -1,0 +1,10 @@
+{
+  "name": "Saathi — A little support. A better workday.",
+  "short_name": "Saathi",
+  "description": "Voice-first guidance, records and grievance help for India's everyday workers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfcf9",
+  "theme_color": "#304d45",
+  "icons": [{"src":"/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
