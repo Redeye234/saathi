@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { apiFetch } from "./api-url";
 
 export function useVoice(onTranscript: (text: string) => void) {
   const [state, setState] = useState<
@@ -82,7 +83,7 @@ export function useVoice(onTranscript: (text: string) => void) {
             new Blob(chunks, { type: recording.mimeType || "audio/webm" }),
             "recording",
           );
-          const response = await fetch("/api/voice/transcribe", {
+          const response = await apiFetch("/api/voice/transcribe", {
             method: "POST",
             body: form,
             signal: controller.current.signal,
@@ -130,7 +131,7 @@ export function useVoice(onTranscript: (text: string) => void) {
     controller.current = new AbortController();
     setState("preparing");
     try {
-      const response = await fetch("/api/voice/speak", {
+      const response = await apiFetch("/api/voice/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text.slice(0, 3500) }),

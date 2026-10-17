@@ -1,4 +1,5 @@
 import type { ComplaintPackage, ConversationTurn, Plan, Source } from "./types";
+import { apiFetch } from "./api-url";
 
 export type AssistantResult = {
   text: string;
@@ -20,7 +21,7 @@ export async function requestAssistant(
     throw new Error(
       "You are offline. Your records and saved packages still work. Connect to use AI.",
     );
-  const response = await fetch("/api/assistant", {
+  const response = await apiFetch("/api/assistant", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),

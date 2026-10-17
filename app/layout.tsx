@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import "./globals.css";
-import PwaRegister from "./pwa-register";
+import "../frontend/globals.css";
+import PwaRegister from "../frontend/pwa-register";
 
 export const metadata: Metadata = {
   title: "Saathi — A little support. A better workday.",

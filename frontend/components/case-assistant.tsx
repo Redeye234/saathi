@@ -15,18 +15,18 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { requestAssistant, downloadBlob } from "../lib/api-client";
-import { prepareDocument, DOCUMENT_TTL_MS } from "../lib/media";
-import { useVoice } from "../lib/use-voice";
-import { exportPackage, packageText } from "../lib/package-export";
-import { indiaDate } from "../lib/earnings.mjs";
-import { sources } from "../lib/knowledge.mjs";
+import { requestAssistant, downloadBlob } from "../../lib/api-client";
+import { prepareDocument, DOCUMENT_TTL_MS } from "../../lib/media";
+import { useVoice } from "../../lib/use-voice";
+import { exportPackage, packageText } from "../../lib/package-export";
+import { indiaDate } from "../../lib/earnings.mjs";
+import { sources } from "../../lib/knowledge.mjs";
 import type {
   ComplaintPackage,
   ConversationTurn,
   Plan,
   SavedCase,
-} from "../lib/types";
+} from "../../lib/types";
 
 type Props = {
   language: string;

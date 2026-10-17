@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { Sprout, ArrowUpRight, Volume2 } from "lucide-react";
-import { matchSchemes } from "../lib/schemes.mjs";
-import { sources } from "../lib/knowledge.mjs";
-import { requestAssistant } from "../lib/api-client";
-import { useVoice } from "../lib/use-voice";
+import { matchSchemes } from "../../lib/schemes.mjs";
+import { sources } from "../../lib/knowledge.mjs";
+import { requestAssistant } from "../../lib/api-client";
+import { useVoice } from "../../lib/use-voice";
 export function SchemeMatcher({
   language,
   state,

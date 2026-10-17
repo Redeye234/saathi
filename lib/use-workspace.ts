@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cleanWorkspace } from "./contracts.mjs";
 import type { User, Workspace } from "./types";
+import { apiFetch } from "./api-url";
 
 type Snapshot = { data: Workspace; revision: string | null; dirty: boolean };
 type Session = {
@@ -54,7 +55,7 @@ export function useWorkspace() {
       while (state.current.snapshot.dirty && navigator.onLine) {
         const sent = state.current.snapshot;
         setStatus("Saving to your account…");
-        const response = await fetch("/api/workspace", {
+        const response = await apiFetch("/api/workspace", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ data: sent.data, revision: sent.revision }),
@@ -95,7 +96,7 @@ export function useWorkspace() {
       } catch {}
       let result: Session;
       try {
-        const response = await fetch("/api/session", { cache: "no-store" });
+        const response = await apiFetch("/api/session", { cache: "no-store" });
         if (!response.ok) throw new Error();
         result = await response.json();
       } catch {
@@ -128,7 +129,7 @@ export function useWorkspace() {
         setError("A saved device copy could not be read.");
       }
       try {
-        const response = await fetch("/api/workspace", { cache: "no-store" });
+        const response = await apiFetch("/api/workspace", { cache: "no-store" });
         if (!response.ok) throw new Error();
         const cloud = (await response.json()) as {
           data: Workspace;
@@ -204,7 +205,7 @@ export function useWorkspace() {
   }, [data, conflict, sync]);
   async function resolveConflict(choice: "device" | "account") {
     try {
-      const response = await fetch("/api/workspace", { cache: "no-store" });
+      const response = await apiFetch("/api/workspace", { cache: "no-store" });
       if (!response.ok) throw new Error("Reconnect to resolve this.");
       const cloud = (await response.json()) as {
         data: Workspace;
@@ -233,7 +234,7 @@ export function useWorkspace() {
       return;
     }
     try {
-      const response = await fetch("/api/auth/logout");
+      const response = await apiFetch("/api/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error();
     } catch {
       setError("Reconnect before signing out.");

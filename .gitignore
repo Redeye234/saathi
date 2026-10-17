@@ -31,7 +31,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.local.example
 .dev.vars*
+dev.vars*
 *.tsbuildinfo
 
 # vercel
@@ -57,3 +59,8 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+/backend/.venv/
+/backend/__pycache__/
+/backend/saathi_api/__pycache__/
+/backend/*.db
+/backend/migration-export*.json

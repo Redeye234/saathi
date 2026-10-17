@@ -20,11 +20,11 @@ import { Logo, WorkersArt } from "./brand";
 import { LoginLanding } from "./login-landing";
 import { CaseAssistant } from "./case-assistant";
 import { SchemeMatcher } from "./scheme-matcher";
-import { useWorkspace } from "../lib/use-workspace";
-import { languages, navigation } from "../lib/languages";
-import { indiaDate, summarize, csvExport } from "../lib/earnings.mjs";
-import { downloadBlob } from "../lib/api-client";
-import type { SavedCase } from "../lib/types";
+import { useWorkspace } from "../../lib/use-workspace";
+import { languages, navigation } from "../../lib/languages";
+import { indiaDate, summarize, csvExport } from "../../lib/earnings.mjs";
+import { downloadBlob } from "../../lib/api-client";
+import type { SavedCase } from "../../lib/types";
 
 const views = [
   "overview",
@@ -42,6 +42,13 @@ const money = (n: number) =>
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
+  }).format(n);
+const compactMoney = (n: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    notation: "compact",
+    maximumFractionDigits: 1,
   }).format(n);
 export default function Saathi() {
   const workspace = useWorkspace();
@@ -63,6 +70,31 @@ export default function Saathi() {
   const labels = navigation[data.lang] || navigation.en;
   const totals = summarize(data.entries);
   const today = indiaDate();
+  const week = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(`${today}T00:00:00Z`);
+    day.setUTCDate(day.getUTCDate() - (6 - index));
+    const date = day.toISOString().slice(0, 10);
+    return {
+      date,
+      label: new Intl.DateTimeFormat("en-IN", {
+        weekday: "short",
+        timeZone: "UTC",
+      }).format(day),
+      ...summarize(data.entries, date, date),
+    };
+  });
+  const weekMax = Math.max(
+    1,
+    ...week.map((day) => day.income),
+    ...week.map((day) => day.expenses),
+  );
+  const weekTotals = week.reduce(
+    (sum, day) => ({
+      income: sum.income + day.income,
+      expenses: sum.expenses + day.expenses,
+    }),
+    { income: 0, expenses: 0 },
+  );
   function go(next: View) {
     setView(next);
     setMenu(false);
@@ -449,6 +481,69 @@ export default function Saathi() {
                   <strong>{money(totals.net)}</strong>
                 </div>
               </div>
+              <section className="panel earnings-week">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">THE LAST SEVEN DAYS</span>
+                    <h2>See how your week is going.</h2>
+                  </div>
+                  <div className="chart-legend" aria-label="Chart legend">
+                    <span>
+                      <i className="legend-income" /> Income
+                    </span>
+                    <span>
+                      <i className="legend-expense" /> Expenses
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="week-chart"
+                  role="img"
+                  aria-label={`Seven day earnings chart. ${week
+                    .map(
+                      (day) =>
+                        `${day.label}: income ${money(day.income)}, expenses ${money(day.expenses)}`,
+                    )
+                    .join(". ")}`}
+                >
+                  {week.map((day) => (
+                    <div className="week-chart-day" key={day.date}>
+                      <div className="week-chart-values">
+                        <span>{day.income ? compactMoney(day.income) : ""}</span>
+                        <span>{day.expenses ? compactMoney(day.expenses) : ""}</span>
+                      </div>
+                      <div className="week-chart-bars">
+                        <div
+                          className="week-bar income-bar"
+                          style={{ height: `${(day.income / weekMax) * 100}%` }}
+                          title={`Income: ${money(day.income)}`}
+                        />
+                        <div
+                          className="week-bar expense-bar"
+                          style={{ height: `${(day.expenses / weekMax) * 100}%` }}
+                          title={`Expenses: ${money(day.expenses)}`}
+                        />
+                      </div>
+                      <span className="week-chart-label">{day.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="week-summary">
+                  <span>
+                    7 day income <strong>{money(weekTotals.income)}</strong>
+                  </span>
+                  <span>
+                    7 day expenses <strong>{money(weekTotals.expenses)}</strong>
+                  </span>
+                  <span>
+                    After expenses{" "}
+                    <strong>{money(weekTotals.income - weekTotals.expenses)}</strong>
+                  </span>
+                </div>
+                {!weekTotals.income && !weekTotals.expenses && (
+                  <p className="week-empty">Add a transaction to see your week take shape.</p>
+                )}
+              </section>
               <section className="panel">
                 <h2>Add a record</h2>
                 <form

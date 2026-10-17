@@ -453,21 +453,6 @@ form {
 .auth-card > .button {
   margin-top: 14px;
 }
-.demo-note {
-  background: #f0f3e8;
-  padding: 16px 20px;
-  border-radius: 13px;
-  font-size: 12px;
-  margin: 16px 0;
-}
-.demo-note strong {
-  display: block;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-.demo-note span {
-  color: var(--muted);
-}
 .entry-footer {
   display: flex;
   justify-content: space-between;
@@ -606,6 +591,101 @@ form {
 }
 .metric-grid .panel {
   padding: 22px;
+}
+.earnings-week {
+  margin-top: 20px;
+}
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.chart-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+.legend-income,
+.income-bar {
+  background: #4b795a;
+}
+.legend-expense,
+.expense-bar {
+  background: #d69a55;
+}
+.week-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 230px;
+  padding: 12px 4px 0;
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent 56px,
+    #e9ede4 57px,
+    transparent 58px
+  );
+}
+.week-chart-day {
+  display: grid;
+  grid-template-rows: 34px 1fr 24px;
+  min-width: 0;
+  text-align: center;
+}
+.week-chart-values {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.15;
+}
+.week-chart-bars {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 5px;
+  min-height: 0;
+}
+.week-bar {
+  width: min(30%, 22px);
+  min-height: 0;
+  border-radius: 5px 5px 2px 2px;
+  transition: height 0.35s ease;
+}
+.week-chart-label {
+  padding-top: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.week-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 15px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.week-summary strong {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+}
+.week-empty {
+  margin: 14px 0 0;
+  font-size: 12px;
 }
 .metric-grid span {
   font-size: 12px;
@@ -1011,6 +1091,16 @@ form {
   }
   .metric-grid strong {
     font-size: 23px;
+  }
+  .week-chart {
+    gap: 4px;
+    min-height: 190px;
+  }
+  .week-chart-values {
+    font-size: 8px;
+  }
+  .week-summary {
+    gap: 10px 16px;
   }
   .metric-grid span {
     font-size: 10px;

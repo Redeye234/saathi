@@ -2,6 +2,13 @@
 
 A responsive worker dashboard built with React, TypeScript and Vinext, deployable as a Cloudflare Worker through Sites.
 
+## Project layout
+
+- `frontend/` contains the React UI, its components and hooks, styles, and page implementation.
+- `backend/` contains the optional Python FastAPI service.
+- `app/` contains the Next/Vinext route entrypoints and the existing `/api/*` handlers used by the Cloudflare deployment. The page and layout files here are small framework entrypoints that connect to `frontend/`.
+- `lib/` and `db/` contain shared application and Cloudflare API code; `public/` remains at the repository root because the current Next/Vinext build serves it from there.
+
 ## Features
 
 - AI guidance, document explanation and grievance drafting via a server-side OpenAI Responses API integration.
@@ -14,16 +21,33 @@ A responsive worker dashboard built with React, TypeScript and Vinext, deployabl
 
 ## Run locally
 
-Requires Node 22.13+.
+Requires Node 22.13+ and Python 3.12+. Install the frontend dependencies from the repository root with `npm install`.
 
-```sh
-npm install
-npm run dev
+## Python API backend
+
+The browser interface is React. A FastAPI service in `backend/` can serve the same `/api/*` contract for sign-in, Google OAuth, workspace sync, AI and voice. Point the frontend at it with the public build variable `NEXT_PUBLIC_SAATHI_API_URL`; leave it unset to use the existing Cloudflare handlers.
+
+Local configuration files are provided as `backend/.env` and root `.env.local` (both ignored by Git). The frontend points to FastAPI at `http://localhost:8000`; set `OPENAI_API_KEY` and Google OAuth values in `backend/.env` when those features are needed. If setting up another checkout, copy `backend/.env.example` to `backend/.env` and `.env.local.example` to `.env.local`.
+
+Start the API in one PowerShell terminal:
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn saathi_api.main:app --reload --port 8000
 ```
 
-If the Windows npm shim is broken, invoke npm through its installed `node_modules/npm/bin/npm-cli.js` with Node.
+In a second PowerShell terminal, from the repository root, run `npm install` once and then `npm run dev` to start React/Vinext on port 5173. `.env.local` directs browser API calls to FastAPI. The Python API defaults to a local SQLite database. For a hosted service, set a managed PostgreSQL `DATABASE_URL`, set `ENVIRONMENT=production`, use a stable HTTPS frontend origin in `FRONTEND_ORIGINS`, and provide secrets through the host's secret manager. Build from `backend/` with `docker build -f Dockerfile .`.
 
-Copy `.env.example` to `.dev.vars` and set `OPENAI_API_KEY`. The default model is `gpt-5-mini`; `OPENAI_MODEL` is configurable. For local Google OAuth, also set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_REDIRECT_URI=http://localhost:8787/api/google/callback`. For Sites hosting, configure these as runtime environment secrets through Sites; never put credentials in browser code or commit them. Restart the server after changing local secrets.
+When using Google sign-in with FastAPI, register the backend callback URL (local default: `http://localhost:8000/api/google/callback`) in Google Cloud and set `GOOGLE_REDIRECT_URI` to that exact URL. The Python OAuth flow validates the one-time state and PKCE verifier before creating a session. Run `alembic upgrade head` as a release step before starting new API instances; do not make every replica race to migrate the production database.
+
+For production, serve the frontend and API under the same site (for example `app.example.com` and `api.example.com`) so browsers accept the HTTP-only session cookie reliably. Set `COOKIE_DOMAIN=.example.com`, `COOKIE_SECURE=true`, and keep `COOKIE_SAMESITE=lax`; configure the exact frontend origin, without a wildcard. Browsers often block cookies when an API on an unrelated domain is embedded as a third party. The in-process request limiter protects a single service process; use a shared gateway or Redis-backed limiter before running multiple API replicas. Apply TLS at the host and keep API keys out of frontend build variables.
+
+The Python database is separate from Cloudflare D1. Before switching a live frontend, prepare a private JSON export with `local_users`, `auth_sessions` and `worker_workspaces` arrays using the existing D1 column names, then run `python -m scripts.import_d1_export migration-export.json` from `backend/` after applying the Alembic migration. The importer validates workspace records, skips the known shared demo account, leaves existing records alone, and does not copy sessions; everyone signs in again. Legacy salted PBKDF2 passwords are verified and upgraded to scrypt at the next successful login. Keep the export private and delete it after migration. The demo account has been removed because its shared public credentials could expose workers' saved information.
+
+Copy `.env.example` to `.dev.vars` and set `OPENAI_API_KEY`. The default model is `gpt-5-mini`; `OPENAI_MODEL` is configurable. For local Google OAuth, also set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_REDIRECT_URI=http://localhost:8787/api/google/callback`. For a separately hosted frontend, configure these as runtime secrets at its host; never put credentials in browser code or commit them. Restart the server after changing local secrets.
 
 Without a key, the app explicitly reports that AI is not connected. Earnings, checklists, official resources and the English grievance template work independently. No canned response is presented as generated AI. The health endpoint reports configuration presence, not provider availability.
 
@@ -39,9 +63,7 @@ npm run build
 Create a Google Cloud OAuth client of type **Web application**. Add these authorized redirect URIs:
 
 - Local: `http://localhost:8787/api/google/callback`
-- Public: `https://saathi-worker-companion.goofy-lemur-2466.chatgpt.site/api/google/callback`
-
-Put the client ID and secret in local `.dev.vars` for local testing. In production, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (secret) and `GOOGLE_REDIRECT_URI` in the Sites runtime environment, then deploy a saved version so the new environment revision is applied. The app stores only a hash of its session cookie in D1.
+For a separately deployed Cloudflare frontend, add its callback URL only while that deployment is in use. For FastAPI hosting, register the backend callback URL shown above. Put credentials in the relevant host's secret manager, not in browser code or source control.
 
 ## Data and boundaries
 
@@ -53,6 +75,6 @@ Official source summaries live in `lib/knowledge.mjs`, reviewed 17 October 2026.
 
 ## Deployment and production considerations
 
-The Sites manifest preserves the project identity and D1 binding in `.openai/hosting.json`; the current deployment is public and uses Google OAuth for user accounts. Add the Google runtime values before inviting users. The API validates requests, bounds message/history sizes, rejects cross-origin browser requests, hides provider errors and keeps API credentials server-side.
+The existing Sites deployment was changed to owner-only access on 17 October 2026. Its deployment URL still exists but is not publicly accessible. Sites controls available in this workflow do not expose an unpublish/delete operation, so this access change does not confirm that the hosting runtime or any associated charges have stopped. `.openai/hosting.json` preserves the project identity and D1 binding; keep it if you may manage the existing Site later. The repository also includes a separate FastAPI backend; it needs its own host and PostgreSQL database before production use.
 
 The automated tests exercise the real API handler with mocked provider responses, request validation, failure modes, grounding, role filtering, India dates, earnings arithmetic and CSV injection handling. A live model response requires a configured key and must be validated separately.

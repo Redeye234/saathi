@@ -8,6 +8,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { Logo, WorkersArt } from "./brand";
+import { apiFetch, apiUrl } from "../../lib/api-url";
 
 export function LoginLanding({
   googleConfigured,
@@ -15,8 +16,8 @@ export function LoginLanding({
   googleConfigured: boolean;
 }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [username, setUsername] = useState("demo");
-  const [password, setPassword] = useState("saathi-demo-2026");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,8 +25,8 @@ export function LoginLanding({
   function changeMode(value: "signin" | "signup") {
     setMode(value);
     setError("");
-    setUsername(value === "signin" ? "demo" : "");
-    setPassword(value === "signin" ? "saathi-demo-2026" : "");
+    setUsername("");
+    setPassword("");
     setConfirmation("");
   }
   async function submit(event: FormEvent) {
@@ -37,7 +38,7 @@ export function LoginLanding({
     }
     setBusy(true);
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/auth/${mode === "signup" ? "signup" : "login"}`,
         {
           method: "POST",
@@ -116,7 +117,7 @@ export function LoginLanding({
             </h2>
             <p className="muted">
               {mode === "signin"
-                ? "Try the demo, or enter your own account details."
+                ? "Sign in with your Saathi account details."
                 : "Keep your earnings, plans and complaints in one place."}
             </p>
             <form onSubmit={submit} autoComplete="on">
@@ -193,23 +194,10 @@ export function LoginLanding({
               </button>
             </form>
             {googleConfigured && (
-              <a className="button secondary full" href="/api/google/start">
+              <a className="button secondary full" href={apiUrl("/api/google/start")}>
                 Continue with Google
               </a>
             )}
-          </div>
-          <div className="demo-note">
-            <strong>Just exploring?</strong>
-            <span>
-              Demo details are already filled in. It’s a shared space—use a
-              personal account for your own records.
-            </span>
-            <button
-              className="text-button"
-              onClick={() => changeMode("signin")}
-            >
-              Use demo account <ArrowRight size={16} />
-            </button>
           </div>
           <p className="small muted">
             Your browser’s password manager can save your personal login. Saathi

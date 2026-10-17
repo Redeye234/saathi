@@ -23,6 +23,8 @@
       }
     ],
     "paths": {
+      "@/components/*": ["./frontend/components/*"],
+      "@/hooks/*": ["./frontend/hooks/*"],
       "@/*": [
         "./*"
       ]
