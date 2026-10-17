@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode, type FormEvent } from 'react';
 import Link from 'next/link';
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, AudioLines, BadgeCheck, Bell, BookOpen, BriefcaseBusiness, CalendarDays, Check, CheckCheck, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Download, FileCheck2, FileText, Heart, Home, IndianRupee, Languages, Leaf, Menu, MessageCircle, Mic, Plus, Send, Settings2, ShieldCheck, Sparkles, Sprout, Trash2, TrendingUp, Volume2, Wallet, X, Phone, ExternalLink, Search, Copy, LoaderCircle, MapPin, LockKeyhole, Sun, CircleAlert } from 'lucide-react';
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, BadgeCheck, Bell, BookOpen, CalendarDays, Check, CheckCheck, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Download, FileCheck2, FileText, Heart, Home, Languages, Menu, MessageCircle, Mic, Plus, Settings2, ShieldCheck, Sparkles, Sprout, Trash2, Volume2, Wallet, X, Phone, ExternalLink, Search, Copy, LoaderCircle, LockKeyhole, Sun } from 'lucide-react';
 import { languages, navigation, isRTL } from '../lib/languages';
 import { indiaDate, summarize, csvExport } from '../lib/earnings.mjs';
 import { sources } from '../lib/knowledge.mjs';
