@@ -1,119 +1,698 @@
-'use client';
+"use client";
+import { useState } from "react";
+import {
+  Home,
+  Mic,
+  Wallet,
+  Sprout,
+  FileText,
+  ShieldCheck,
+  Menu,
+  LogOut,
+  ArrowRight,
+  Plus,
+  Trash2,
+  Download,
+  WifiOff,
+  CheckCircle2,
+} from "lucide-react";
+import { Logo, WorkersArt } from "./brand";
+import { LoginLanding } from "./login-landing";
+import { CaseAssistant } from "./case-assistant";
+import { SchemeMatcher } from "./scheme-matcher";
+import { useWorkspace } from "../lib/use-workspace";
+import { languages, navigation } from "../lib/languages";
+import { indiaDate, summarize, csvExport } from "../lib/earnings.mjs";
+import { downloadBlob } from "../lib/api-client";
+import type { SavedCase } from "../lib/types";
 
-import { useEffect, useRef, useState, type ReactNode, type FormEvent } from 'react';
-import Link from 'next/link';
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, BadgeCheck, Bell, BookOpen, CalendarDays, Check, CheckCheck, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Download, FileCheck2, FileText, Heart, Home, ImagePlus, Languages, Menu, MessageCircle, Mic, Plus, Settings2, Share2, ShieldCheck, Sparkles, Sprout, Trash2, Volume2, Wallet, X, Phone, ExternalLink, Search, Copy, LoaderCircle, LockKeyhole, Sun } from 'lucide-react';
-import { languages, navigation, isRTL } from '../lib/languages';
-import { indiaDate, summarize, csvExport } from '../lib/earnings.mjs';
-import { sources } from '../lib/knowledge.mjs';
-
-type Entry = {id:string;date:string;kind:'income'|'expense';amount:number;note:string};
-type Draft = {id:string;title:string;text:string;status:'Draft'|'Sent'|'Resolved';date:string};
-type Source = {id:string;title:string;url:string;reviewed:string};
-type ActionPlan = {summary:string;urgency:'low'|'medium'|'high';nextQuestion:string;nextSteps:string[];evidence:string[];officialLinks:string[];draftText:string};
-type Message = {role:'user'|'assistant';content:string;error?:boolean;language?:string;sources?:Source[]};
-type Profile = {name:string;role:string;state:string};
-type AuthState = {status:'loading'|'anonymous'|'authenticated';user:null|{userId:string;email:string;displayName:string};signInPath:string;signOutPath?:string;authMode:'local';googleConfigured:boolean};
-const tabs = ['overview','chat','earnings','schemes','documents','safety','grievance'] as const;
-type Tab = typeof tabs[number];
-const navIcons = [Home, Sparkles, Wallet, Sprout, FileText, ShieldCheck, MessageCircle];
-const roles = ['Delivery partner','Driver','Daily-wage worker','Construction worker','Domestic worker','Street vendor','Other informal work'];
-const copy = {
- subtitle:'A little support. A better workday.',heroTitle:'You work hard.\nWe’re here to help.',heroText:'From your next payment to your next opportunity — get simple answers, in your own language.',talk:'Let’s talk',askTitle:'What’s on your mind today?',askSub:'Big question or small doubt. Your Saathi is here.',placeholder:'Ask anything about your work, benefits, or documents…',earn:'My earnings',today:'Today',earned:'Earned',spent:'Expenses',takehome:'Take-home',add:'Add entry',quick:'A little help goes a long way',quickSub:'Everything you need to feel more confident at work.',schemes:'Find support for you',schemesSub:'Explore government schemes and understand the next step.',documents:'Make paperwork simpler',documentsSub:'Check what you need. Understand what it means.',safety:'Your wellbeing comes first',safetySub:'Small habits for a safer, healthier workday.',grievance:'Make your voice heard',grievanceSub:'Turn your concern into a clear, respectful grievance.',viewAll:'View all',explore:'Explore schemes',official:'Official resources',local:'Saved on this device',help:'A companion, in your language',helpSub:'Speak or type in the language you’re comfortable with.',language:'Choose your language',save:'Save',cancel:'Cancel',send:'Send message',listen:'Listen',generate:'Generate with AI',welcome:'Hi, I’m Saathi. How can I help?',welcomeSub:'Ask me about work, payments, welfare schemes, documents, or staying safe.',tip:'One small thing for today',tipText:'Before your next shift, check your phone battery and let someone you trust know your plan.',read:'Read safety tips',net:'Net earnings',week:'Last 7 days',balance:'Every rupee, a little clearer.',start:'Your workday, at a glance',startSub:'A little clarity for everything you do.',tracker:'Your work. Your records.',trackerSub:'Keep track of income and expenses, one day at a time.',support:'Here for every kind of work',privacy:'Your records stay in this browser. AI messages are sent only when you ask for help.',docHelp:'Explain a document',docHelpSub:'Paste a short passage and get a simple explanation.',drafts:'Your saved grievances',draftNotice:'Review names, dates and amounts before sharing. Nothing is sent automatically.'
-};
-
-function Logo({small=false}:{small?:boolean}) { return <span className={`brand ${small?'brand-small':''}`}><svg viewBox="0 0 42 42" aria-hidden="true"><rect width="42" height="42" rx="13" fill="currentColor"/><path d="M11 26c0-12 5-19 10-19s10 7 10 19M16 25c0-8 2-13 5-13s5 5 5 13M11 29q10 9 20 0" fill="none" stroke="#edf1d8" strokeWidth="2.4" strokeLinecap="round"/></svg>{!small&&<span>saathi<span className="brand-dot">.</span></span>}</span> }
-function WorkersArt() { return <svg className="workers-art" viewBox="0 0 440 280" fill="none" aria-hidden="true"><circle cx="253" cy="142" r="126" fill="#dce7c4"/><circle cx="365" cy="44" r="13" fill="#f5c981"/><path d="M93 240V107h38v133m10 0V76h48v164m130 0V108h36v132m8 0V142h34v98" fill="#cbdab2"/><path d="M153 95h9m9 0h9m-27 15h9m9 0h9m-27 15h9m9 0h9M104 124h12m-12 16h12m215-14h12m-12 16h12" stroke="#e9efd9" strokeWidth="5"/><path d="M378 246c-5-33 12-63 30-72-1 28-11 51-30 72Z" fill="#779c78"/><path d="M376 252c-26-17-33-39-31-58 19 12 29 29 31 58Z" fill="#94af88"/><path d="M60 259h354" stroke="#648777" strokeWidth="2" strokeLinecap="round"/><path d="m115 186-15 73h24l20-65 12 65h25l-15-78" fill="#304d45"/><path d="M109 113q25-16 50 0l17 79h-74Z" fill="#de9465"/><path d="m106 121-29 44 12 9 34-35m34-18 21 42-10 7-28-32" fill="#de9465"/><path d="m77 164-8 10c-4 9 7 14 11 7l9-9m88-10 8 8c6 9-4 15-9 8l-9-10" fill="#b16d4c"/><rect x="119" y="83" width="29" height="32" rx="12" fill="#b16d4c"/><path d="M118 91c-10-22 32-30 33-5v12h-7V85l-26 8Z" fill="#34483e"/><path d="m118 106 15 14 16-14M113 124h40" stroke="#f4c3a2" strokeWidth="2"/><rect x="78" y="113" width="35" height="45" rx="6" fill="#b77a52"/><path d="m115 260-17 0m64 0h21" stroke="#f1ebd6" strokeWidth="7" strokeLinecap="round"/><path d="m215 183-10 76h22l15-62 8 62h23l-10-77" fill="#244c49"/><path d="M216 111q21-13 42 0l16 83h-71Z" fill="#eff1d8"/><path d="m216 118-17 47-22-3-3 12 32 7 23-42m28-20 18 49-12 5-23-42" fill="#eff1d8"/><path d="m176 163-12-3c-9-1-12 11-1 13l13 2m99-10 4 12c3 11-11 13-12 5l-4-12" fill="#a46b51"/><path d="M216 92c-11-31 38-37 40-7l3 27h-44Z" fill="#284b42"/><rect x="225" y="83" width="25" height="32" rx="11" fill="#aa7257"/><path d="M222 91q16-3 20-12l11 13" fill="#284b42"/><path d="m218 112 17 20 21-22-11 60-21-2Z" fill="#84a38b"/><path d="M224 260h-22m49 0h24" stroke="#e4b388" strokeWidth="7" strokeLinecap="round"/><path d="m307 189-9 70h21l12-60 11 60h21l-8-70" fill="#557668"/><path d="M308 117q26-14 46 0l14 78h-70Z" fill="#d0ac63"/><path d="m309 123-17 49 12 5 20-42m29-12 21 46-12 8-23-42" fill="#d0ac63"/><path d="m293 170-3 13c-2 11 9 11 12 2l3-11m67-6 6 13c3 9-8 14-12 6l-6-12" fill="#bb835b"/><rect x="317" y="86" width="29" height="35" rx="13" fill="#bb835b"/><path d="M313 90c-2-28 39-29 38 0" fill="#ebc771"/><path d="M309 91h47m-23-23v18" stroke="#a78e4c" strokeWidth="4" strokeLinecap="round"/><path d="m314 117 7 40h23l4-40m-44 60h57" stroke="#efe6b8" strokeWidth="7"/><path d="M299 260h24m20 0h23" stroke="#293f37" strokeWidth="7" strokeLinecap="round"/><path d="m63 75 5-12m-2 22-13-3m325 21 10 5" stroke="#c9d4a7" strokeWidth="3" strokeLinecap="round"/><path d="M65 227c-1-22-13-38-29-43 3 21 14 34 29 43Z" fill="#829b6c"/><path d="M65 249v-33" stroke="#648777" strokeWidth="3"/></svg> }
-function Modal({title,children,onClose}:{title:string;children:ReactNode;onClose:()=>void}) {
- const ref=useRef<HTMLDialogElement>(null);
- useEffect(()=>{ref.current?.showModal();const bodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=bodyOverflow;};},[]);
- return <dialog ref={ref} className="modal" onCancel={onClose} onClick={e=>{if(e.target===e.currentTarget)onClose();}}><div className="modal-head"><h2>{title}</h2><button className="icon-button" aria-label="Close dialog" onClick={onClose}><X size={21}/></button></div>{children}</dialog>;
-}
-function download(name:string,content:string,type='text/plain;charset=utf-8') {const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-const money=(n:number)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(n);
-const evidenceItems=[['payment','Payment screenshot, payslip or transaction reference'],['work','Delivery, shift or attendance record'],['support','Previous support ticket, email or chat reply'],['identity','Name and contact details you choose to share (never Aadhaar or OTP)']] as const;
-
-function LoginLanding({signInPath,googleConfigured}:{signInPath:string;googleConfigured:boolean}) {
- const [mode,setMode]=useState<'signin'|'signup'>('signin');
- const demoUsername='demo';const demoPassword='saathi-demo-2026';
- const [username,setUsername]=useState(demoUsername);const [password,setPassword]=useState(demoPassword);const [confirmPassword,setConfirmPassword]=useState('');const [displayName,setDisplayName]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);
- function switchMode(next:'signin'|'signup'){setMode(next);setError('');if(next==='signup'){setUsername('');setPassword('');setConfirmPassword('');}else if(!username&&!password){setUsername(demoUsername);setPassword(demoPassword);}}
- async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setError('');if(mode==='signup'&&password!==confirmPassword){setError('Passwords do not match.');return;}setBusy(true);try{const response=await fetch(mode==='signup'?'/api/auth/signup':signInPath,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,confirmPassword,displayName})});const body=await response.json() as {error?:string};if(!response.ok)throw new Error(body.error||'Please try again.');window.location.reload();}catch(error){setError(error instanceof Error?error.message:'Authentication failed. Please try again.');setBusy(false);}}
- return <div className="login-page"><header className="login-nav"><Link className="logo-link" href="/" aria-label="Saathi home"><Logo/></Link><span className="login-nav-note"><ShieldCheck size={15}/> Private by design</span></header><main className="login-main"><section className="login-hero"><div className="login-copy"><span className="pill light">FOR INDIA&apos;S EVERYDAY WORKERS</span><h1>Your workday deserves a little support.</h1><p>Saathi gives delivery partners, drivers and daily-wage workers clear guidance in their language—from payments and welfare schemes to documents, safety and grievances.</p><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode==='signin'?'active':''} onClick={()=>switchMode('signin')}>Sign in</button><button type="button" className={mode==='signup'?'active':''} onClick={()=>switchMode('signup')}>Create account</button></div><form onSubmit={submit} autoComplete={mode==='signup'?'off':'on'}><h2>{mode==='signup'?'Create your Saathi account':'Welcome back'}</h2><p className="auth-subtitle">{mode==='signup'?'Use a username and password. No Google account is required.':'Demo credentials are filled in for a quick start. You can replace them with your own account.'}</p>{mode==='signup'&&<label>Display name<input name="name" value={displayName} onChange={e=>setDisplayName(e.target.value)} maxLength={60} placeholder="Your name" autoComplete="name"/></label>}<label>Username<input name="username" value={username} onChange={e=>setUsername(e.target.value)} minLength={3} maxLength={40} pattern="[A-Za-z0-9._-]+" required placeholder="e.g. ramesh_01" autoComplete="username" autoCapitalize="none" spellCheck={false}/></label><label>Password<input name="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} minLength={8} required placeholder="At least 8 characters" autoComplete={mode==='signup'?'new-password':'current-password'}/></label>{mode==='signup'&&<label>Confirm password<input name="confirmPassword" type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} minLength={8} required placeholder="Repeat your password" autoComplete="new-password"/></label>}{error&&<p className="auth-error" role="alert">{error}</p>}<button className="button dark full auth-submit" type="submit" disabled={busy}>{busy?<LoaderCircle size={17} className="spin"/>:mode==='signup'?'Create account':'Sign in'}<ArrowRight size={17}/></button></form>{googleConfigured&&<><div className="auth-divider"><span>or</span></div><a className="button outline full google-option" href="/api/google/start">Continue with Google<ArrowRight size={16}/></a></>}</div><div className="demo-access"><div><strong>Demo account</strong><small>For reviewers and quick testing</small></div><code>Username: {demoUsername}</code><code>Password: {demoPassword}</code><button type="button" className="text-button" onClick={()=>{setMode('signin');setUsername(demoUsername);setPassword(demoPassword);setError('');}}>Use demo account <ArrowRight size={14}/></button><small>Shared public demo. Create your own account for private records.</small></div><p className="login-trust"><Check size={14}/> Your workspace stays yours. Passwords are protected and never shown in the browser.</p></div><div className="login-art"><WorkersArt/></div></section><section className="login-features"><div><span className="icon-tile sage"><Sparkles size={21}/></span><h2>Simple answers</h2><p>Ask questions about rights, schemes and work in the language you are comfortable with.</p></div><div><span className="icon-tile sand"><Wallet size={21}/></span><h2>Clear records</h2><p>Track income, expenses and saved grievance drafts in one personal workspace.</p></div><div><span className="icon-tile blue"><ShieldCheck size={21}/></span><h2>Safer work</h2><p>Get practical safety reminders and links to official information when you need it.</p></div></section><p className="login-footer"><Languages size={15}/> English and all 22 scheduled Indian languages · AI guidance is a starting point, not legal or financial advice.</p></main></div>
-}
-
+const views = [
+  "overview",
+  "assistant",
+  "earnings",
+  "schemes",
+  "documents",
+  "safety",
+  "cases",
+] as const;
+type View = (typeof views)[number];
+const icons = [Home, Mic, Wallet, Sprout, FileText, ShieldCheck, FileText];
+const money = (n: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(n);
 export default function Saathi() {
- const [tab,setTab]=useState<Tab>('overview');const [menu,setMenu]=useState(false);const [modal,setModal]=useState<'language'|'entry'|'profile'|'help'|null>(null);
- const [lang,setLang]=useState('en');const [customLang,setCustomLang]=useState('');const [languageSearch,setLanguageSearch]=useState('');const [entries,setEntries]=useState<Entry[]>([]);const [drafts,setDrafts]=useState<Draft[]>([]);const [checks,setChecks]=useState<string[]>([]);const [profile,setProfile]=useState<Profile>({name:'',role:'Delivery partner',state:''});const [loaded,setLoaded]=useState(false);const [auth,setAuth]=useState<AuthState>({status:'loading',user:null,signInPath:'/api/auth/login',authMode:'local',googleConfigured:false});const [workspaceReady,setWorkspaceReady]=useState(false);const [syncing,setSyncing]=useState(false);
- const [messages,setMessages]=useState<Message[]>([]);const [input,setInput]=useState('');const [busy,setBusy]=useState(false);const [configured,setConfigured]=useState<boolean|null>(null);const [toast,setToast]=useState('');const [online,setOnline]=useState(true);const [translations,setTranslations]=useState<Record<string,string>>({});const [listening,setListening]=useState(false);const [actionInput,setActionInput]=useState('');const [actionPlan,setActionPlan]=useState<ActionPlan|null>(null);const [actionBusy,setActionBusy]=useState(false);
- const [period,setPeriod]=useState('week');const [schemeFilter,setSchemeFilter]=useState('All');const [docText,setDocText]=useState('');const [docImage,setDocImage]=useState('');const [docImageName,setDocImageName]=useState('');const [docResult,setDocResult]=useState('');const [draftText,setDraftText]=useState('');const [draftTitle,setDraftTitle]=useState('Payment not received');const [draftFacts,setDraftFacts]=useState('');const [draftType,setDraftType]=useState('');const [featureError,setFeatureError]=useState('');const [evidenceChecks,setEvidenceChecks]=useState<string[]>([]);
- const chatEnd=useRef<HTMLDivElement>(null);const speech=useRef<{stop:()=>void}|null>(null);
- const selectedLang=languages.find(l=>l[0]===lang)||languages[0];const outputLanguage=lang==='custom'?customLang:selectedLang[1];const labels=navigation[lang]||navigation.en;
- const t=(key:keyof typeof copy)=>translations[key]||copy[key];
- const today=indiaDate();const dayOffset=(offset:number)=>{const d=new Date(`${today}T12:00:00+05:30`);d.setDate(d.getDate()+offset);return indiaDate(d);};
- const weekStart=dayOffset(-6);const totals=summarize(entries,period==='today'?today:period==='week'?weekStart:period==='month'?today.slice(0,7)+'-01':'',today);const todayTotals=summarize(entries,today,today);
- function navigate(value:Tab){setTab(value);setMenu(false);setFeatureError('');window.scrollTo({top:0,behavior:'smooth'});}
- useEffect(()=>{try {const raw=localStorage.getItem('saathi-v1');if(raw){const s=JSON.parse(raw);if(Array.isArray(s.entries))setEntries(s.entries.filter((e:Entry)=>e&&Number.isFinite(e.amount)&&e.amount>0&&['income','expense'].includes(e.kind)&&typeof e.date==='string'&&typeof e.note==='string'));if(Array.isArray(s.drafts))setDrafts(s.drafts.filter((d:Draft)=>d&&typeof d.text==='string'&&typeof d.title==='string'));if(Array.isArray(s.checks))setChecks(s.checks.filter((v:unknown)=>typeof v==='string'));if(Array.isArray(s.evidenceChecks))setEvidenceChecks(s.evidenceChecks.filter((v:unknown)=>typeof v==='string'));if(s.profile&&typeof s.profile.name==='string')setProfile(s.profile);if(typeof s.lang==='string')setLang(s.lang);if(typeof s.customLang==='string')setCustomLang(s.customLang);}}catch{setToast('Saved data could not be read. You can start a new record.');}setLoaded(true);setOnline(navigator.onLine);const on=()=>setOnline(true),off=()=>setOnline(false);window.addEventListener('online',on);window.addEventListener('offline',off);fetch('/api/assistant').then(r=>r.json() as Promise<{configured?:boolean;text?:string}>).then(d=>setConfigured(Boolean(d.configured))).catch(()=>setConfigured(false));return()=>{window.removeEventListener('online',on);window.removeEventListener('offline',off);speech.current?.stop();window.speechSynthesis?.cancel();};},[]);
- useEffect(()=>{let cancelled=false;fetch('/api/session',{cache:'no-store'}).then(r=>r.json() as Promise<{authenticated?:boolean;authMode?:'local';googleConfigured?:boolean;user?:{userId:string;email:string;displayName:string}|null;signInPath?:string;signOutPath?:string}>).then(async session=>{if(cancelled)return;const authenticated=Boolean(session.authenticated&&session.user);setAuth({status:authenticated?'authenticated':'anonymous',user:authenticated?session.user||null:null,signInPath:session.signInPath||'/api/auth/login',signOutPath:session.signOutPath,authMode:'local',googleConfigured:Boolean(session.googleConfigured)});if(!authenticated){setWorkspaceReady(false);return;}const cloud=await fetch('/api/workspace',{cache:'no-store'});if(!cloud.ok){setWorkspaceReady(true);return;}const body=await cloud.json() as {data?:Record<string,unknown>};const data=body.data||{};if(Array.isArray(data.entries))setEntries(data.entries as Entry[]);if(Array.isArray(data.drafts))setDrafts(data.drafts as Draft[]);if(Array.isArray(data.checks))setChecks(data.checks.filter((v):v is string=>typeof v==='string'));if(Array.isArray(data.evidenceChecks))setEvidenceChecks(data.evidenceChecks.filter((v):v is string=>typeof v==='string'));if(data.profile&&typeof data.profile==='object')setProfile(data.profile as Profile);if(typeof data.lang==='string')setLang(data.lang);if(typeof data.customLang==='string')setCustomLang(data.customLang);setWorkspaceReady(true);}).catch(()=>{if(!cancelled){setAuth(v=>({...v,status:'anonymous'}));setWorkspaceReady(false);}});return()=>{cancelled=true;};},[]);
- useEffect(()=>{if(loaded)try{localStorage.setItem('saathi-v1',JSON.stringify({entries,drafts,checks,evidenceChecks,profile,lang,customLang}));}catch{setToast('Your browser could not save this change. Download a copy of important records.');}},[entries,drafts,checks,evidenceChecks,profile,lang,customLang,loaded]);
- useEffect(()=>{if(!loaded||auth.status!=='authenticated'||!workspaceReady)return;const snapshot={entries,drafts,checks,evidenceChecks,profile,lang,customLang};const timer=setTimeout(async()=>{setSyncing(true);try{const response=await fetch('/api/workspace',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:snapshot})});if(!response.ok)setToast('Your device copy is safe, but cloud sync needs another try.');}catch{setToast('Your device copy is safe, but cloud sync is unavailable.');}finally{setSyncing(false);}},500);return()=>clearTimeout(timer);},[entries,drafts,checks,evidenceChecks,profile,lang,customLang,loaded,auth.status,workspaceReady]);
- useEffect(()=>{if(toast){const timer=setTimeout(()=>setToast(''),5000);return()=>clearTimeout(timer);}},[toast]);
- useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:'smooth',block:'nearest'});},[messages,busy]);
- useEffect(()=>{document.documentElement.lang=lang==='custom'?'en':lang;setTranslations({});if(lang==='en'||!configured)return;const controller=new AbortController();fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'translate',language:outputLanguage,message:JSON.stringify(copy)}),signal:controller.signal}).then(r=>r.json() as Promise<{configured?:boolean;text?:string}>).then(d=>{if(d.text){const result=JSON.parse(d.text.replace(/^```(?:json)?\s*|\s*```$/g,''));const valid:Record<string,string>={};for(const key of Object.keys(copy))if(typeof result[key]==='string')valid[key]=result[key];setTranslations(valid);}}).catch(()=>{});return()=>controller.abort();},[lang,customLang,configured,outputLanguage]);
-	 async function requestAI(mode:string,message:string,history:Message[]=[],imageData=''){const res=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,message,language:outputLanguage,history:history.filter(m=>!m.error).map(({role,content})=>({role,content})),...(imageData?{imageData}: {})})});const data=await res.json() as {error?:string;text:string;sources?:Source[];actionPlan?:ActionPlan};if(!res.ok)throw new Error(data.error||'Saathi could not answer. Please try again.');return data;}
- async function callAI(mode:string,message:string,history:Message[]=[],imageData=''){return (await requestAI(mode,message,history,imageData)).text;}
- async function ask(question=input,spoken=false){if(!question.trim()||busy)return;const history=messages;setMessages(m=>[...m,{role:'user',content:question}]);setInput('');navigate('chat');setBusy(true);try{const answer=await requestAI('chat',`${question}\n\nWorker context: ${profile.role}${profile.state?`, state: ${profile.state}`:''}`,history);setMessages(m=>[...m,{role:'assistant',content:answer.text,language:lang,sources:answer.sources}]);if(spoken)readAloud(answer.text);}catch(e){setMessages(m=>[...m,{role:'assistant',content:e instanceof Error?e.message:'Connection interrupted. Please try again.',error:true}]);setInput(question);}finally{setBusy(false);}}
- function startVoice(){if(listening){speech.current?.stop();setListening(false);return;}type Recognition={lang:string;interimResults:boolean;onresult:(e:{results:{transcript:string}[][]})=>void;onerror:()=>void;onend:()=>void;start:()=>void;stop:()=>void};const w=window as unknown as {SpeechRecognition?:new()=>Recognition;webkitSpeechRecognition?:new()=>Recognition};const RecognitionClass=w.SpeechRecognition||w.webkitSpeechRecognition;if(!RecognitionClass){setToast('Voice input is unavailable in this browser. Please type your question.');return;}try{const recognition=new RecognitionClass();recognition.lang=lang==='custom'?'hi-IN':`${lang}-IN`;recognition.interimResults=false;recognition.onresult=e=>{const transcript=e.results[0][0].transcript.trim();if(transcript)void ask(transcript,true);};recognition.onerror=()=>{setListening(false);setToast('Voice input could not start. Check microphone permission and language support.');};recognition.onend=()=>setListening(false);speech.current=recognition;recognition.start();setListening(true);setToast(`Listening in ${outputLanguage}. Saathi will answer aloud.`);}catch{setToast('The microphone is unavailable. You can type your question.');}}
- async function runActionLoop(){const issue=actionInput.trim();if(!issue||actionBusy)return;setActionBusy(true);setFeatureError('');try{const result=await requestAI('action',`${issue}\n\nWorker context: ${profile.role}; state: ${profile.state||'not supplied'}; today\'s recorded net: ${money(todayTotals.net)}.`,[]);if(!result.actionPlan)throw new Error('Saathi could not prepare a structured plan.');setActionPlan(result.actionPlan);if(result.actionPlan.nextQuestion)setToast(`One detail will help: ${result.actionPlan.nextQuestion}`);}catch(e){setFeatureError(e instanceof Error?e.message:'The action plan could not be prepared. Please try again.');}finally{setActionBusy(false);}}
- function useActionPlan(){if(!actionPlan)return;setDraftTitle('Payment not received');setDraftFacts(actionPlan.summary+'\n\n'+actionPlan.nextSteps.join('\n'));setDraftText(actionPlan.draftText||'');setDraftType(actionPlan.draftText?'Saathi action plan · ready to review':'');navigate('grievance');}
- function readAloud(text:string,code=lang){if(!('speechSynthesis' in window)){setToast('Read aloud is unavailable in this browser.');return;}const voice=window.speechSynthesis.getVoices().find(v=>v.lang.split('-')[0]===code);window.speechSynthesis.cancel();const speechText=new SpeechSynthesisUtterance(text);if(voice)speechText.voice=voice;speechText.lang=code==='custom'?'hi-IN':`${code}-IN`;speechText.rate=.9;window.speechSynthesis.speak(speechText);}
-	 async function copyText(text:string){try{await navigator.clipboard.writeText(text);setToast('Copied. Ready to paste where you need it.');}catch{setToast('Copy is unavailable. Use Download to keep a copy.');}}
-	 async function shareDraft(text=draftText){try{if(navigator.share){await navigator.share({title:`Saathi: ${draftTitle}`,text});setToast('Draft shared. Review it once more before sending.');return;}window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank','noopener,noreferrer');setToast('WhatsApp share opened. Review the draft before sending.');}catch(error){if(error instanceof DOMException&&error.name==='AbortError')return;setToast('Sharing is unavailable. Use Copy or Download instead.');}}
- function buildGrievancePackage(text=draftText){const evidence=evidenceItems.map(([id,label])=>`${evidenceChecks.includes(id)?'☑':'☐'} ${label}`).join('\n');const links=sources.filter(s=>['grievance','eshram'].includes(s.id)).map(s=>`${s.title}: ${s.url}`).join('\n');return `SAATHI GRIEVANCE PACKAGE\n${draftTitle}\nPrepared: ${today}\n\nDRAFT COMPLAINT\n${text}\n\nEVIDENCE CHECKLIST\n${evidence}\n\nOFFICIAL STARTING POINTS\n${links}\n\nReview every name, date and amount before sharing. Saathi has not submitted this complaint. Remove sensitive numbers before sending.`;}
- function downloadGrievancePdf(){if(!draftText.trim())return;const printWindow=window.open('','_blank');if(!printWindow){setToast('Allow pop-ups to save the PDF package.');return;}const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));printWindow.document.write(`<html><head><title>Saathi grievance package</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;color:#253b31;line-height:1.55}h1{font-size:24px}h2{font-size:15px;border-bottom:1px solid #dfe7d7;padding-bottom:6px;margin-top:28px}pre{white-space:pre-wrap;font:14px/1.6 Arial}.note{color:#6f7f72;font-size:12px}</style></head><body><h1>${escapeHtml(draftTitle)}</h1><p class="note">Saathi grievance package · ${today}</p><h2>Draft complaint</h2><pre>${escapeHtml(draftText)}</pre><h2>Evidence checklist</h2><pre>${escapeHtml(evidenceItems.map(([id,label])=>`${evidenceChecks.includes(id)?'☑':'☐'} ${label}`).join('\n'))}</pre><h2>Official starting points</h2><pre>${escapeHtml(sources.filter(s=>['grievance','eshram'].includes(s.id)).map(s=>`${s.title}: ${s.url}`).join('\n'))}</pre><p class="note">Review names, dates and amounts before sharing. Saathi has not submitted this complaint.</p></body></html>`);printWindow.document.close();printWindow.focus();setTimeout(()=>printWindow.print(),250);setToast('Print dialog opened. Choose “Save as PDF” to download the package.');}
- function saveEntry(e:FormEvent<HTMLFormElement>){e.preventDefault();const d=new FormData(e.currentTarget);const amount=Number(d.get('amount'));const date=String(d.get('date'));if(!Number.isFinite(amount)||amount<=0||amount>10000000||date>today)return;setEntries(v=>[{id:crypto.randomUUID(),date,kind:d.get('kind') as Entry['kind'],amount:Math.round(amount*100)/100,note:String(d.get('note')).trim()},...v]);setModal(null);setToast('Entry saved. Every rupee counts.');}
-	 async function readDocumentImage(file:File){if(!file.type.startsWith('image/')){setToast('Choose a PNG, JPEG or WebP image.');return;}if(file.size>6000000){setToast('Choose an image under 6 MB.');return;}try{const source=await createImageBitmap(file);const maxSide=1600;const scale=Math.min(1,maxSide/Math.max(source.width,source.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));canvas.getContext('2d')?.drawImage(source,0,0,canvas.width,canvas.height);source.close();setDocImage(canvas.toDataURL('image/jpeg',.78));setDocImageName(file.name);setDocText('');}catch{setToast('This image could not be prepared. Try a clear screenshot or paste the text instead.');}}
-	 async function generateDocument(){if((!docText.trim()&&!docImage)||busy)return;setBusy(true);setFeatureError('');setDocResult('');try{setDocResult(await callAI('document',docText.trim()||'Read this document image and explain the important parts in simple language.',[],docImage));}catch(e){setFeatureError(e instanceof Error?e.message:'Please try again.');}finally{setBusy(false);}}
- async function generateDraft(){if(!draftFacts.trim()||busy)return;setBusy(true);setFeatureError('');try{setDraftText(await callAI('draft',`Issue: ${draftTitle}\nFacts: ${draftFacts}\nWorker type: ${profile.role}\nState: ${profile.state||'not supplied'}`));setDraftType(`AI draft · ${outputLanguage}`);}catch(e){setFeatureError(e instanceof Error?e.message:'Please try again.');}finally{setBusy(false);}}
- function templateDraft(){setDraftText(`Subject: ${draftTitle}\n\nDear [recipient / support team],\n\nI am writing to request help with the following issue:\n\n${draftFacts||'[Describe what happened, including work dates and payment references.]'}\n\nPlease review the records and provide a written response explaining the next steps. I request [describe the resolution you are seeking].\n\nSupporting records: [list any relevant screenshots, receipts or work records].\n\nThank you,\n${profile.name||'[Your name]'}\n[Contact details you choose to share]\n[Date]\n\nReview all details before sending. This draft has not been submitted.`);setDraftType('Editable template · English');setFeatureError('');}
- function saveDraft(){if(!draftText.trim())return;setDrafts(v=>[{id:crypto.randomUUID(),title:draftTitle,text:draftText,status:'Draft',date:today},...v]);setToast('Grievance saved on this device.');}
- const tasks=[{icon:Sprout,title:t('schemes'),text:'Discover benefits you may be able to access.',tab:'schemes',color:'sage'},{icon:FileText,title:t('documents'),text:'Checklists and explanations, without the jargon.',tab:'documents',color:'sand'},{icon:ShieldCheck,title:t('safety'),text:'Practical guidance for life on the job.',tab:'safety',color:'blue'},{icon:MessageCircle,title:t('grievance'),text:'Get help putting your concern into words.',tab:'grievance',color:'rose'}] as const;
- const checklist=[{id:'identity',title:'Identity document ready',text:'Keep your Aadhaar available for the official portal. Do not enter its number here.'},{id:'mobile',title:'Mobile access checked',text:'Check access to your Aadhaar-linked mobile, or ask a CSC about assisted registration.'},{id:'work',title:'Work details ready',text:'Keep your current occupation and address details handy.'},{id:'eligibility',title:'Official criteria reviewed',text:'Check age and other requirements on the e-Shram website before applying.'}];
- const composer=(compact=false)=><form className={`composer ${compact?'compact':''}`} onSubmit={e=>{e.preventDefault();void ask();}}><input aria-label="Ask Saathi" value={input} onChange={e=>setInput(e.target.value)} placeholder={t('placeholder')} maxLength={6000} disabled={busy}/><button type="button" className={`icon-button ${listening?'listening':''}`} onClick={startVoice} aria-label={listening?'Stop recording':'Start voice input'} title="Voice availability depends on your browser"><Mic size={20}/></button><button type="submit" className="send-button" disabled={!input.trim()||busy} aria-label={t('send')}>{busy?<LoaderCircle className="spin" size={19}/>:<ArrowRight size={20}/>}</button></form>;
-
- if(auth.status==='loading') return <div className="login-loading" role="status"><Logo/><span>Checking your Saathi workspace…</span></div>;
-  if(auth.status==='anonymous') return <LoginLanding signInPath={auth.signInPath} googleConfigured={auth.googleConfigured}/>;
-
- return <div className="app-shell" data-ready={loaded}><a className="skip-link" href="#main">Skip to content</a>{menu&&<button className="nav-backdrop" aria-label="Close navigation" onClick={()=>setMenu(false)}/>}
- <aside className={`sidebar ${menu?'open':''}`}><a className="logo-link" href="#" onClick={e=>{e.preventDefault();navigate('overview');}} aria-label="Saathi home"><Logo/></a><div className="sidebar-caption">YOUR EVERYDAY COMPANION</div><nav aria-label="Main navigation">{tabs.map((id,i)=>{const Icon=navIcons[i];return <button key={id} onClick={()=>navigate(id)} className={`nav-item ${tab===id?'active':''}`} aria-current={tab===id?'page':undefined}><Icon size={19} strokeWidth={1.7}/><span lang={lang==='custom'?'en':lang} dir={isRTL(lang)?'rtl':'ltr'}>{labels[i]}</span>{id==='chat'&&<span className="ai-tag">AI</span>}</button>;})}</nav>
-  <div className="sidebar-bottom"><div className="language-callout"><div className="mini-language">अ<span>அ</span><span>অ</span></div><strong>{t('help')}</strong><p>{t('helpSub')}</p><button onClick={()=>setModal('language')}>22 languages & more <ArrowRight size={15}/></button></div><button className="nav-item help-item" onClick={()=>setModal('help')}><CircleHelp size={19}/>Help & privacy</button><button className="profile-button" onClick={()=>setModal('profile')}><span className="avatar">{(profile.name||auth.user?.displayName||'S').slice(0,2).toUpperCase()}</span><span><strong>{profile.name||auth.user?.displayName||'Your workspace'}</strong><small>{auth.status==='authenticated'?`Account · ${profile.role}`:profile.role}</small></span><Settings2 size={17}/></button></div></aside>
-  <div className="main-shell"><header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={()=>setMenu(true)}><Menu size={23}/></button><span className="breadcrumb">My workspace <ChevronRight size={14}/><strong>{labels[tabs.indexOf(tab)]}</strong></span></div><div className="topbar-actions"><span className={`connection ${!online?'offline':''}`}><span/>{auth.status==='authenticated'?(syncing?'Saving to your account':'Synced to your account'):auth.status==='loading'?'Checking account':online?'Saved on this device':'Offline · local tools ready'}</span><button className="language-button" onClick={()=>setModal('language')}><Languages size={17}/><span>{lang==='custom'?customLang:selectedLang[2]}</span><ChevronDown size={14}/></button><button className="icon-button notification-button" aria-label="View reminders" onClick={()=>{setModal('help');}}><Bell size={19}/></button><a className="button outline auth-button" href={auth.status==='authenticated'?(auth.signOutPath||'/api/auth/logout'):auth.signInPath}>{auth.status==='authenticated'?'Sign out':'Sign in'}</a><button className="avatar avatar-small" onClick={()=>setModal('profile')} aria-label="Edit your profile">{(profile.name||auth.user?.displayName||'S')[0].toUpperCase()}</button></div></header>
- <main id="main"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line"/> YOUR WORK. YOUR WELLBEING.</div><h1>{tab==='overview'?<>{profile.name?`Hello, ${profile.name}`:selectedLang[3]} <span className="wave">✦</span></>:labels[tabs.indexOf(tab)]}</h1><p>{tab==='overview'?t('subtitle'):tab==='chat'?t('welcomeSub'):tab==='earnings'?t('trackerSub'):tab==='schemes'?t('schemesSub'):tab==='documents'?t('documentsSub'):tab==='safety'?t('safetySub'):t('grievanceSub')}</p></div><div className="date-badge"><CalendarDays size={16}/><span>{new Date(`${today}T12:00:00+05:30`).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</span></div></div>
- {lang!=='en'&&Object.keys(translations).length===0&&<p className="language-note">Guidance language: {outputLanguage}. Some interface text is shown in English{configured?' while translation loads':'. AI translation requires a connection'}.</p>}
-
- {tab==='overview'&&<><div className="dashboard-grid"><section className="hero-card"><div className="hero-copy"><span className="pill light"><Sparkles size={13}/> A SAATHI BY YOUR SIDE</span><h2>{t('heroTitle')}</h2><p>{t('heroText')}</p><button className="button dark" onClick={()=>navigate('chat')}>{t('talk')}<ArrowUpRight size={18}/></button><div className="hero-foot"><span className="tiny-dots"><span/><span/><span/></span>For every worker. Every day.</div></div><WorkersArt/></section><section className="card earnings-peek"><div className="card-top"><span className="icon-tile sage"><Wallet size={20}/></span><span className="muted">{t('today')} <ChevronDown size={13}/></span></div><p className="small-heading">{t('takehome')}</p><div className="big-money">{money(todayTotals.net)}</div><div className="earnings-split"><div><span><ArrowDownLeft size={14}/>{t('earned')}</span><strong>{money(todayTotals.income)}</strong></div><div><span><ArrowUpRight size={14}/>{t('spent')}</span><strong>{money(todayTotals.expenses)}</strong></div></div><button className="button outline full" onClick={()=>setModal('entry')}><Plus size={17}/>{t('add')}</button><span className="micro center">A small habit. A clearer picture.</span></section></div>
- <section className="ask-card"><div className="ask-heading"><span className="spark-icon"><Sparkles size={24}/></span><div><h2>{t('askTitle')}</h2><p>{t('askSub')}</p></div><span className="pill ai-pill"><span/>AI companion</span></div>{composer(true)}<div className="prompt-row"><span>Try asking</span>{['How do I get an e-Shram card?','Help with a delayed payment','How can I work more safely?'].map(q=><button key={q} onClick={()=>void ask(q)}>{q}<ArrowUpRight size={12}/></button>)}</div></section>
- <section className="action-loop-card"><div className="action-loop-head"><span className="icon-tile rose"><Sparkles size={22}/></span><div><span className="pill neutral">SAATHI ACTION LOOP</span><h2>Turn a problem into a plan.</h2><p>Say what happened. Saathi chooses the next best step, the evidence to keep, and whether a grievance draft is useful.</p></div></div><form className="action-loop-form" onSubmit={e=>{e.preventDefault();void runActionLoop();}}><input aria-label="Describe what is blocking you" value={actionInput} onChange={e=>setActionInput(e.target.value)} maxLength={5000} placeholder="For example: मेरा भुगतान नहीं आया"/><button type="submit" className="button dark" disabled={!actionInput.trim()||actionBusy}>{actionBusy?<LoaderCircle size={16} className="spin"/>:<Sparkles size={16}/>}Make my plan</button></form>{actionPlan&&<div className="action-plan"><div className="action-plan-top"><strong>{actionPlan.summary}</strong><span className={`pill urgency-${actionPlan.urgency}`}>{actionPlan.urgency} priority</span></div>{actionPlan.nextQuestion&&<p className="action-question"><CircleHelp size={15}/> {actionPlan.nextQuestion}</p>}<div className="action-plan-columns"><div><h3>Next steps</h3><ol>{actionPlan.nextSteps.map(step=><li key={step}>{step}</li>)}</ol></div><div><h3>Keep this evidence</h3><ul>{actionPlan.evidence.map(item=><li key={item}>{item}</li>)}</ul></div></div>{actionPlan.draftText&&<button type="button" className="button outline" onClick={useActionPlan}><FileText size={16}/>Open grievance package</button>}{actionPlan.officialLinks.length>0&&<div className="action-links">{actionPlan.officialLinks.map(id=>{const source=sources.find(s=>s.id===id);return source?<a key={id} href={source.url} target="_blank" rel="noreferrer">{source.title}<ExternalLink size={13}/></a>:null})}</div>}</div>}{featureError&&<p className="error-box" role="alert">{featureError}</p>}</section>
- <div className="section-heading"><div><h2>{t('quick')}</h2><p>{t('quickSub')}</p></div><span className="muted small">MADE FOR YOUR EVERYDAY</span></div><div className="task-grid">{tasks.map(({icon:Icon,title,text,tab:target,color})=><button className="task-card" key={target} onClick={()=>navigate(target)}><span className={`icon-tile ${color}`}><Icon size={22}/></span><h3>{title}</h3><p>{text}</p><ArrowUpRight className="task-arrow" size={19}/></button>)}</div>
- <div className="bottom-grid"><section className="card scheme-preview"><div className="card-title"><span className="icon-tile sage small-tile"><Sprout size={19}/></span><h2>A little support for your future</h2><span className="pill neutral">WELFARE SPOTLIGHT</span></div><div className="scheme-preview-body"><div className="scheme-art"><FileCheck2 size={44} strokeWidth={1.2}/><BadgeCheck className="scheme-badge" size={26}/></div><div><h3>Start with e-Shram</h3><p>A first step to exploring welfare support for unorganised workers. Find out what you need and how to register.</p><button className="text-button" onClick={()=>navigate('schemes')}>Help me understand<ArrowRight size={16}/></button></div></div></section><section className="tip-card"><div className="tip-top"><Sun size={19}/><span>{t('tip')}</span><Heart size={17}/></div><h3>Take a breath.<br/>You matter, too.</h3><p>{t('tipText')}</p><button className="text-button" onClick={()=>navigate('safety')}>{t('read')}<ArrowRight size={16}/></button></section></div><div className="support-strip"><span><Heart size={15}/> Built around the people who keep India moving.</span><span>Delivery partners · Drivers · Daily-wage workers · And you.</span></div></>}
-
- {tab==='chat'&&<div className="chat-layout"><section className="card chat-panel"><div className="chat-toolbar"><div><Logo small/><span><strong>Saathi</strong><small>{outputLanguage} · {configured?'AI connected':'AI connection pending'}</small></span></div><button className="text-button" onClick={()=>{setMessages([]);setInput('');}} disabled={busy}>New conversation <Plus size={15}/></button></div><div className="chat-messages" aria-live="polite">{messages.length===0?<div className="chat-welcome"><span className="welcome-icon"><Sparkles size={33}/></span><h2>{t('welcome')}</h2><p>{t('welcomeSub')}</p><div className="chat-suggestions">{['What support is available for my work?','Help me understand my rights','Explain an e-Shram application','Help me draft a payment complaint'].map(q=><button key={q} onClick={()=>void ask(q)}>{q}<ArrowUpRight size={16}/></button>)}</div></div>:messages.map((m,i)=><div className={`message ${m.role} ${m.error?'message-error':''}`} key={i}>{m.role==='assistant'&&<Logo small/>}<div><div className="message-text" dir="auto">{m.content}</div>{m.role==='assistant'&&!m.error&&<>{m.sources&&m.sources.length>0&&<div className="message-sources"><span><ShieldCheck size={13}/> Official starting points</span>{m.sources.slice(0,3).map(s=><a key={s.id} href={s.url} target="_blank" rel="noreferrer">{s.title}<ExternalLink size={12}/></a>)}</div>}<div className="message-actions"><button onClick={()=>readAloud(m.content,m.language)}><Volume2 size={14}/> {t('listen')}</button><button onClick={()=>void copyText(m.content)}><Copy size={14}/>Copy</button></div></>}</div></div>)}{busy&&<div className="thinking"><LoaderCircle size={16} className="spin"/>Saathi is thinking…</div>}<div ref={chatEnd}/></div><div className="chat-composer">{composer()}<p className="micro"><LockKeyhole size={11}/> Keep Aadhaar numbers, passwords and OTPs out of chat. Review AI answers with official sources.</p></div></section><aside className="chat-side"><section className="card"><span className="icon-tile sage"><BookOpen size={22}/></span><h3>Clear answers.<br/>Trusted starting points.</h3><p>Saathi uses a small library of official resources. Rules can change; check the relevant portal before applying.</p>{sources.slice(0,3).map(s=><a className="resource-link" key={s.id} href={s.url} target="_blank" rel="noreferrer">{s.title}<ExternalLink size={14}/></a>)}<p className="micro">Resources reviewed 17 October 2026</p></section><div className="quiet-note"><ShieldCheck size={20}/><p>Urgent danger? Get to a safe place if you can and <a href="tel:112">call 112</a>. Saathi cannot contact emergency services.</p></div></aside></div>}
-
- {tab==='earnings'&&<><div className="toolbar"><div className="segmented">{[['today','Today'],['week','7 days'],['month','This month'],['all','All time']].map(([v,l])=><button key={v} className={period===v?'selected':''} onClick={()=>setPeriod(v)}>{l}</button>)}</div><div className="button-row"><button className="button outline" disabled={!entries.length} onClick={()=>download('saathi-earnings.csv',csvExport(entries),'text/csv;charset=utf-8')}><Download size={16}/>Export</button><button className="button dark" onClick={()=>setModal('entry')}><Plus size={17}/>{t('add')}</button></div></div><div className="stat-grid">{[{label:t('earned'),value:totals.income,icon:ArrowDownLeft,color:'sage'},{label:t('spent'),value:totals.expenses,icon:ArrowUpRight,color:'sand'},{label:t('net'),value:totals.net,icon:Wallet,color:'blue'}].map(({label,value,icon:Icon,color})=><section className="card stat-card" key={label}><span className={`icon-tile ${color}`}><Icon size={20}/></span><p>{label}</p><strong>{money(value)}</strong></section>)}</div><section className="card chart-card"><div className="section-heading"><h2>{t('balance')}</h2><span className="muted small">Income · Last 7 days</span></div><div className="bar-chart" role="img" aria-label="Income for each of the last seven days">{Array.from({length:7},(_,i)=>dayOffset(i-6)).map(date=>{const amount=summarize(entries,date,date).income;const max=Math.max(1,...Array.from({length:7},(_,i)=>summarize(entries,dayOffset(i-6),dayOffset(i-6)).income));return <div className="chart-column" key={date}><span>{money(amount)}</span><div className="bar-track"><div style={{height:`${Math.max(2,amount/max*100)}%`}}/></div><small>{new Date(`${date}T12:00:00+05:30`).toLocaleDateString('en-IN',{weekday:'short'})}</small></div>;})}</div></section><section className="card record-card"><div className="section-heading"><h2>Your entries</h2><span className="pill neutral">{entries.length} records</span></div>{entries.length?<div className="table-scroll"><table><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{[...entries].sort((a,b)=>b.date.localeCompare(a.date)).map(e=><tr key={e.id}><td>{e.date}</td><td>{e.note||'Work entry'}</td><td><span className={`pill ${e.kind==='income'?'sage':'sand'}`}>{e.kind}</span></td><td className={e.kind==='income'?'amount-positive':''}>{e.kind==='expense'?'−':'+'}{money(e.amount)}</td><td><button className="icon-button" aria-label={`Delete ${e.note||'entry'}`} onClick={()=>{setEntries(v=>v.filter(x=>x.id!==e.id));setToast('Entry removed.');}}><Trash2 size={16}/></button></td></tr>)}</tbody></table></div>:<div className="empty-state"><Wallet size={32}/><h3>Your first entry is a fresh start.</h3><p>Add today’s income or an expense to see your workday clearly.</p><button className="button dark" onClick={()=>setModal('entry')}><Plus size={16}/>Add your first entry</button></div>}</section><p className="micro center">{t('local')} · Export regularly if you share this device or clear browser data.</p></>}
-
- {tab==='schemes'&&<><div className="info-banner"><Sprout size={24}/><div><strong>Good support starts with the right information.</strong><p>These are starting points, not eligibility decisions. Each scheme has its own criteria.</p></div><button className="button outline" onClick={()=>void ask('Help me explore welfare support. Ask me which details you need to check relevant criteria.')}>Ask Saathi<Sparkles size={16}/></button></div><div className="filter-row">{['All','Registration','Pension'].map(v=><button className={`filter-chip ${schemeFilter===v?'selected':''}`} key={v} onClick={()=>setSchemeFilter(v)}>{v}</button>)}</div><div className="scheme-grid">{[{id:'eshram',category:'Registration',title:'e-Shram',subtitle:'A starting point for worker welfare',text:'Register as an unorganised worker and explore linked welfare services. Registration itself does not guarantee payments or benefits.',facts:['For eligible unorganised workers','Review age and coverage criteria','Assisted registration through a CSC'],url:'https://eshram.gov.in/faqs'},{id:'pmsym',category:'Pension',title:'PM Shram Yogi Maan-dhan',subtitle:'Plan for the years ahead',text:'A voluntary pension scheme with regular contributions. Check the official criteria and contribution requirements before enrolling.',facts:['Entry age generally 18–40','Monthly income ₹15,000 or less','Other coverage and tax criteria apply'],url:'https://labour.gov.in/FAQ-0'}].filter(s=>schemeFilter==='All'||s.category===schemeFilter).map(s=><section className="card scheme-card" key={s.id}><div className="card-top"><span className="icon-tile sage">{s.id==='eshram'?<FileCheck2 size={24}/>:<Sprout size={24}/>}</span><span className="pill neutral">{s.category}</span></div><h2>{s.title}</h2><p className="scheme-subtitle">{s.subtitle}</p><p>{s.text}</p><ul className="check-list">{s.facts.map(f=><li key={f}><Check size={15}/>{f}</li>)}</ul><button className="button dark full" onClick={()=>void ask(`Explain ${s.title} in simple language and help me check what information I need before applying.`)}>Understand this scheme<ArrowRight size={16}/></button><a className="resource-link" href={s.url} target="_blank" rel="noreferrer">Read official requirements<ExternalLink size={14}/></a></section>)}</div><div className="quiet-note"><BadgeCheck size={21}/><p>Information checked against official resources on 17 October 2026. Rules and eligibility can change. Never share an OTP with someone offering to register you.</p></div></>}
-
-	 {tab==='documents'&&<div className="two-column"><section className="card document-checklist"><span className="icon-tile sand"><ClipboardList size={24}/></span><h2>Your e-Shram checklist</h2><p>Get ready before you visit the official portal or a Common Service Centre.</p><div className="progress-label"><span>{checks.length} of {checklist.length} ready</span><span>{Math.round(checks.length/checklist.length*100)}%</span></div><div className="progress-track"><span style={{width:`${checks.length/checklist.length*100}%`}}/></div>{checklist.map(c=><label className={`checklist-item ${checks.includes(c.id)?'checked':''}`} key={c.id}><input type="checkbox" checked={checks.includes(c.id)} onChange={()=>setChecks(v=>v.includes(c.id)?v.filter(x=>x!==c.id):[...v,c.id])}/><span><strong>{c.title}</strong><small>{c.text}</small></span></label>)}<a className="resource-link" href="https://eshram.gov.in/faqs" target="_blank" rel="noreferrer">Verify requirements on e-Shram<ExternalLink size={14}/></a><p className="micro">This is a readiness checklist, not a document upload or verification service.</p></section><section className="card document-explain"><span className="icon-tile sage"><Sparkles size={23}/></span><h2>{t('docHelp')}</h2><p>Paste text or upload a clear screenshot. Saathi will explain it in simple language.</p><label className="field-label" htmlFor="document-text">Document text</label><textarea id="document-text" rows={7} maxLength={12000} value={docText} onChange={e=>{setDocText(e.target.value);if(e.target.value)setDocImage('');}} placeholder="Paste the part you need help understanding. Remove personal identification and account numbers first."/><label className="file-label"><ImagePlus size={16}/>Read a document screenshot<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)void readDocumentImage(file);e.currentTarget.value='';}}/></label>{docImageName&&<p className="micro">Ready: {docImageName} <button type="button" className="text-button" onClick={()=>{setDocImage('');setDocImageName('');}}>Remove</button></p>}<label className="file-label"><FileText size={16}/>Or read a text file<input type="file" accept=".txt,text/plain" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>50000){setToast('Use a text file under 50 KB.');return;}try{setDocText((await file.text()).slice(0,12000));setDocImage('');setDocImageName('');}catch{setToast('This file could not be read. Paste the text instead.');}e.currentTarget.value='';}}/></label><p className="micro">Only the content you choose to explain is sent to AI. Files are resized in your browser and are not saved.</p><button className="button dark full" disabled={(!docText.trim()&&!docImage)||busy} onClick={()=>void generateDocument()}>{busy?<LoaderCircle size={17} className="spin"/>:<Sparkles size={17}/>}Explain in {outputLanguage}</button>{featureError&&<p className="error-box" role="alert">{featureError}</p>}{docResult&&<div className="result-box" dir="auto"><div className="result-toolbar"><strong>Simple explanation</strong><button className="icon-button" onClick={()=>readAloud(docResult)} aria-label="Read explanation"><Volume2 size={17}/></button></div>{docResult}</div>}</section></div>}
-
- {tab==='safety'&&<><section className="safety-hero"><div><span className="pill light"><Heart size={13}/> YOU COME FIRST</span><h2>A safer workday starts<br/>with a few small habits.</h2><p>Look after yourself, on the road and off it.</p></div><ShieldCheck size={120} strokeWidth={.8}/></section><div className="task-grid safety-grid">{[{icon:Sun,title:'Pause. Drink. Rest.',text:'Carry drinking water, take breaks in the shade, and stop working if you feel unwell. Ask for help when you need it.'},{icon:ShieldCheck,title:'Before you head out',text:'Check your vehicle, helmet and lights. Keep your phone charged and share your plan with someone you trust.'},{icon:LockKeyhole,title:'Protect your information',text:'Keep OTPs, PINs and passwords private. Use official apps and websites for payments or scheme registration.'},{icon:Heart,title:'Give yourself a moment',text:'A difficult day can feel heavy. Take a short pause, reach out to someone you trust, and make time for rest.'}].map(({icon:Icon,title,text})=><section className="card safety-card" key={title}><span className="icon-tile sage"><Icon size={23}/></span><h3>{title}</h3><p>{text}</p></section>)}</div><div className="emergency-card"><span className="icon-tile rose"><Phone size={25}/></span><div><h2>Need urgent help?</h2><p>For immediate police, fire or medical assistance in India, call 112. This app does not send alerts or dispatch help.</p><a href="https://112.gov.in/" target="_blank" rel="noreferrer">Official emergency information <ExternalLink size={12}/></a></div><a className="button emergency-button" href="tel:112"><Phone size={17}/>Call 112</a></div><section className="card rights-card"><BookOpen size={25}/><div><h2>Understand your rights, one step at a time.</h2><p>Keep your work agreement, payment records and support messages. Rights and remedies depend on your state and how you work.</p></div><button className="button outline" onClick={()=>void ask('Help me understand my work rights. Ask about my state and work arrangement before explaining anything specific.')}>Ask about my rights<ArrowRight size={16}/></button></section></>}
-
- {tab==='grievance'&&<><div className="two-column"><section className="card grievance-form"><span className="icon-tile rose"><MessageCircle size={23}/></span><h2>Your concern deserves clear words.</h2><p>Tell Saathi what happened. You decide what to share and when.</p><label className="field-label" htmlFor="issue">What is the issue?</label><select id="issue" value={draftTitle} onChange={e=>setDraftTitle(e.target.value)}>{['Payment not received','Incorrect deduction','Account deactivation','Unsafe working conditions','e-Shram service issue','Other concern'].map(v=><option key={v}>{v}</option>)}</select><label className="field-label" htmlFor="facts">What happened?</label><textarea id="facts" value={draftFacts} onChange={e=>setDraftFacts(e.target.value)} rows={7} maxLength={7000} placeholder="For example: I completed 12 deliveries on 14 October. My payment of ₹850 has not arrived. I contacted support on 16 October…"/><p className="micro">Include facts, dates, amounts and the outcome you want. Leave out Aadhaar, OTPs and account numbers.</p><button className="button dark full" onClick={()=>void generateDraft()} disabled={!draftFacts.trim()||busy}>{busy?<LoaderCircle className="spin" size={17}/>:<Sparkles size={17}/>}Draft in {outputLanguage}</button><button className="text-button template-button" onClick={templateDraft}>Use an editable English template<ArrowRight size={15}/></button>{featureError&&<p className="error-box" role="alert">{featureError}</p>}</section><section className="card draft-preview"><div className="card-top"><h2>Your draft</h2>{draftType&&<span className="pill neutral">{draftType}</span>}</div>{draftText?<><label className="sr-only" htmlFor="draft-edit">Edit grievance draft</label><textarea id="draft-edit" className="draft-editor" rows={17} dir="auto" value={draftText} onChange={e=>setDraftText(e.target.value)}/><div className="evidence-panel"><div><strong>Evidence checklist</strong><small>Tick what you have. It will be included in your share/PDF package.</small></div>{evidenceItems.map(([id,label])=><label key={id}><input type="checkbox" checked={evidenceChecks.includes(id)} onChange={()=>setEvidenceChecks(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id])}/><span>{label}</span></label>)}</div><div className="button-row"><button className="button dark" onClick={saveDraft}><Check size={16}/>Save draft</button><button className="button outline" onClick={downloadGrievancePdf}><FileText size={16}/>Save PDF</button><button className="button outline" onClick={()=>void shareDraft(buildGrievancePackage())}><Share2 size={16}/>Share package</button><button className="icon-button" aria-label="Copy draft" onClick={()=>void copyText(buildGrievancePackage())}><Copy size={18}/></button></div><p className="micro">{t('draftNotice')} The package includes your evidence checklist and official starting points.</p></>:<div className="empty-state"><FileText size={44} strokeWidth={1.2}/><h3>From a concern to a clear next step.</h3><p>Your editable draft will appear here. Review it, save it, and share it yourself.</p></div>}</section></div><section className="card saved-drafts"><div className="section-heading"><h2>{t('drafts')}</h2><span className="pill neutral">{drafts.length}</span></div>{drafts.length?drafts.map(d=><div className="saved-draft" key={d.id}><span className="icon-tile sand"><FileText size={20}/></span><button className="draft-open" onClick={()=>{setDraftTitle(d.title);setDraftText(d.text);setDraftType('Saved draft');window.scrollTo({top:0,behavior:'smooth'});}}><strong>{d.title}</strong><small>{d.date}</small></button><select aria-label={`Status for ${d.title}`} value={d.status} onChange={e=>setDrafts(v=>v.map(x=>x.id===d.id?{...x,status:e.target.value as Draft['status']}:x))}>{['Draft','Sent','Resolved'].map(s=><option key={s}>{s}</option>)}</select><button className="icon-button" aria-label={`Download ${d.title}`} onClick={()=>download('saathi-grievance.txt',d.text)}><Download size={17}/></button><button className="icon-button" aria-label={`Share ${d.title}`} onClick={()=>void shareDraft(buildGrievancePackage(d.text))}><Share2 size={17}/></button><button className="icon-button" aria-label={`Delete ${d.title}`} onClick={()=>setDrafts(v=>v.filter(x=>x.id!==d.id))}><Trash2 size={17}/></button></div>):<p className="muted">No saved drafts yet. Start with your concern above.</p>}<p className="micro">Status is updated by you. Saathi does not submit or track complaints with any authority.</p></section></>}
- <footer><span><Logo small/> A little support, every step of the way.</span><button onClick={()=>setModal('help')}><LockKeyhole size={13}/>Your privacy matters</button></footer></main></div>
-
- {modal==='entry'&&<Modal title="Add a work entry" onClose={()=>setModal(null)}><p className="muted">A few details now. A clearer picture later.</p><form onSubmit={saveEntry}><div className="form-grid"><label>Type<select name="kind" aria-label="Entry type"><option value="income">Income</option><option value="expense">Expense</option></select></label><label>Date<input name="date" type="date" defaultValue={today} max={today} required/></label></div><label>Amount (₹)<input name="amount" type="number" min="0.01" max="10000000" step="0.01" inputMode="decimal" placeholder="0.00" autoFocus required/></label><label>Description<input name="note" placeholder="Deliveries, daily wages, fuel, lunch…" maxLength={160}/></label><div className="modal-actions"><button type="button" className="button outline" onClick={()=>setModal(null)}>{t('cancel')}</button><button className="button dark" type="submit">Save entry<Check size={16}/></button></div></form></Modal>}
- {modal==='language'&&<Modal title={t('language')} onClose={()=>setModal(null)}><p className="muted">All 22 scheduled Indian languages, English, and room for your own language or dialect.</p><div className="search-field"><Search size={17}/><input value={languageSearch} onChange={e=>setLanguageSearch(e.target.value)} placeholder="Search a language" aria-label="Search languages" autoFocus/></div><div className="language-grid">{languages.filter(l=>l.join(' ').toLowerCase().includes(languageSearch.toLowerCase())).map(l=><button key={l[0]} className={`language-option ${lang===l[0]?'chosen':''}`} onClick={()=>{setLang(l[0]);setModal(null);setLanguageSearch('');}}><strong lang={l[0]} dir={isRTL(l[0])?'rtl':'ltr'}>{l[2]}</strong><small>{l[1]}</small>{lang===l[0]&&<Check size={15}/>}</button>)}</div><form className="custom-language" onSubmit={e=>{e.preventDefault();if(customLang.trim()){setLang('custom');setModal(null);}}}><label htmlFor="custom-language">Another Indian language or dialect</label><div className="button-row"><input id="custom-language" value={customLang} onChange={e=>setCustomLang(e.target.value)} maxLength={60} placeholder="For example: Bhojpuri, Tulu, Hinglish"/><button className="button dark" disabled={!customLang.trim()}>Use</button></div></form><p className="micro">AI language quality can vary. Voice input and read aloud depend on device support.</p></Modal>}
- {modal==='profile'&&<Modal title="Make Saathi yours" onClose={()=>setModal(null)}><p className="muted">A little context helps Saathi offer more relevant guidance.</p><form onSubmit={e=>{e.preventDefault();const d=new FormData(e.currentTarget);setProfile({name:String(d.get('name')).trim(),role:String(d.get('role')),state:String(d.get('state')).trim()});setModal(null);setToast('Your workspace is updated.');}}><label>What should we call you?<input name="name" defaultValue={profile.name} maxLength={40} placeholder="Your first name"/></label><label>Your work<select name="role" defaultValue={profile.role}>{roles.map(r=><option key={r}>{r}</option>)}</select></label><label>State or union territory<input name="state" defaultValue={profile.state} placeholder="For example: Maharashtra" maxLength={60}/></label><p className="micro">Your workspace syncs to your account when signed in; a device copy stays here too.</p><div className="modal-actions"><button className="button dark" type="submit">Save profile<Check size={16}/></button>{auth.status==='authenticated'?<a className="button outline" href={auth.signOutPath||'/api/auth/logout'}>Sign out</a>:<a className="button outline" href={auth.signInPath}>Sign in</a>}</div></form></Modal>}
- {modal==='help'&&<Modal title="A companion you can understand" onClose={()=>setModal(null)}><div className="help-content"><section><span className="icon-tile sage"><Bell size={21}/></span><h3>A gentle reminder</h3><p>Log your earnings after each shift and keep a copy of any important payment or work record.</p></section><section><h3>Your privacy, simply put</h3><p>When you are signed in, your workspace is synced to the app database. A device copy remains in this browser. Neither copy is encrypted and may be visible to someone using the same browser. Chat and document text are not saved by this app.</p><p>When you request AI help, your text, selected language, and relevant work context are sent to OpenAI. Do not include Aadhaar numbers, OTPs, passwords or full bank details.</p><p>Clearing browser data removes your records. Export earnings and download drafts to keep your own copies.</p></section><section><h3>About the AI</h3><p>{configured?'AI is connected.':'AI is not connected yet. The owner needs to configure a server-side OPENAI_API_KEY.'} Answers can make mistakes. Verify benefits and legal information with the linked official source. Language quality and device voice support vary.</p></section><section><h3>In an emergency</h3><p>Call <a href="tel:112">112</a> for urgent police, fire or medical help in India. Saathi cannot contact emergency services.</p></section></div></Modal>}
- {toast&&<div className="toast" role="status"><CheckCheck size={18}/>{toast}<button aria-label="Dismiss notification" onClick={()=>setToast('')}><X size={15}/></button></div>}
- </div>;
+  const workspace = useWorkspace();
+  const { data, update, session, online } = workspace;
+  const [view, setView] = useState<View>("overview");
+  const [menu, setMenu] = useState(false);
+  const [activeCase, setActiveCase] = useState<SavedCase | undefined>();
+  const [seed, setSeed] = useState("");
+  const [caseKey, setCaseKey] = useState(0);
+  const [amount, setAmount] = useState("");
+  const [kind, setKind] = useState<"income" | "expense">("income");
+  const [note, setNote] = useState("");
+  const [date, setDate] = useState(indiaDate());
+  const [fatigue, setFatigue] = useState(2);
+  const [safe, setSafe] = useState(true);
+  const [missed, setMissed] = useState("");
+  const [message, setMessage] = useState("");
+  const language = languages.find((l) => l[0] === data.lang) || languages[0];
+  const labels = navigation[data.lang] || navigation.en;
+  const totals = summarize(data.entries);
+  const today = indiaDate();
+  function go(next: View) {
+    setView(next);
+    setMenu(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function start(text = "", value?: SavedCase) {
+    setSeed(text);
+    setActiveCase(value);
+    setCaseKey((k) => k + 1);
+    go("assistant");
+  }
+  function save(value: SavedCase) {
+    update((w) => ({
+      ...w,
+      cases: [value, ...w.cases.filter((v) => v.id !== value.id)],
+    }));
+  }
+  if (!session)
+    return (
+      <div className="loading-screen">
+        <Logo />
+        <p>Opening your Saathi…</p>
+      </div>
+    );
+  if (!session.authenticated)
+    return <LoginLanding googleConfigured={session.googleConfigured} />;
+  return (
+    <div className="workspace">
+      <aside className={`sidebar ${menu ? "open" : ""}`}>
+        <Logo />
+        <span className="sidebar-caption">A little support. Every day.</span>
+        <nav>
+          {views.map((value, i) => {
+            const Icon = icons[i];
+            return (
+              <button
+                key={value}
+                className={view === value ? "active" : ""}
+                onClick={() => go(value)}
+              >
+                <Icon size={19} />
+                {labels[i]}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="sidebar-bottom">
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={data.lowData}
+              onChange={(e) =>
+                update((w) => ({ ...w, lowData: e.target.checked }))
+              }
+            />
+            Low-data mode
+          </label>
+          <p className="small muted">
+            Smaller images. Spoken replies on request. Records available
+            offline.
+          </p>
+          <button
+            className="text-button"
+            onClick={() => void workspace.signOut()}
+          >
+            <LogOut size={17} />
+            Sign out
+          </button>
+        </div>
+      </aside>
+      <div className="workspace-body">
+        <header className="topbar">
+          <button
+            className="icon-button mobile-menu"
+            aria-label="Open navigation"
+            onClick={() => setMenu(!menu)}
+          >
+            <Menu />
+          </button>
+          <span className="sync-state">
+            {online ? <CheckCircle2 size={15} /> : <WifiOff size={15} />}{" "}
+            {workspace.status}
+          </span>
+          <div className="row">
+            <select
+              aria-label="Choose language"
+              value={data.lang}
+              onChange={(e) => update((w) => ({ ...w, lang: e.target.value }))}
+            >
+              {languages.map((l) => (
+                <option key={l[0]} value={l[0]}>
+                  {l[2]}
+                </option>
+              ))}
+            </select>
+            <span className="avatar">
+              {session.user?.displayName?.[0] || "S"}
+            </span>
+          </div>
+        </header>
+        <main className="workspace-main">
+          {workspace.error && (
+            <div className="notice error" role="alert">
+              {workspace.error}{" "}
+              <button
+                className="text-button"
+                onClick={() => void workspace.sync()}
+              >
+                Retry sync
+              </button>
+            </div>
+          )}
+          {workspace.conflict && (
+            <div className="notice">
+              Your account changed elsewhere. Choose the copy to keep.
+              <div className="row">
+                <button
+                  onClick={() => void workspace.resolveConflict("account")}
+                >
+                  Use account copy
+                </button>
+                <button
+                  onClick={() => void workspace.resolveConflict("device")}
+                >
+                  Keep this device’s copy
+                </button>
+              </div>
+            </div>
+          )}
+          {!online && (
+            <p className="notice">
+              You’re offline. Saved records and downloads work; AI and sharing
+              need a connection.
+            </p>
+          )}
+          {view === "overview" && (
+            <>
+              <div className="page-heading">
+                <span className="eyebrow">
+                  {language[3]} · {session.user?.displayName}
+                </span>
+                <h1>Let’s make today a little easier.</h1>
+                <p>
+                  Your work, your records, and a companion in your language.
+                </p>
+              </div>
+              <section className="dashboard-hero">
+                <div>
+                  <span className="pill">FROM A QUESTION TO A NEXT STEP</span>
+                  <h2>
+                    Your voice.
+                    <br />A clear way forward.
+                  </h2>
+                  <p>
+                    A missed payment? A confusing document?
+                    <br />
+                    Tell Saathi. We’ll work through it together.
+                  </p>
+                  <button className="button primary" onClick={() => start()}>
+                    <Mic size={19} />
+                    Talk to Saathi
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+                <WorkersArt />
+              </section>
+              <div className="metric-grid">
+                <div className="panel">
+                  <span>Total earned</span>
+                  <strong>{money(totals.income)}</strong>
+                </div>
+                <div className="panel">
+                  <span>After expenses</span>
+                  <strong>{money(totals.net)}</strong>
+                </div>
+                <div className="panel">
+                  <span>Open cases</span>
+                  <strong>
+                    {data.cases.filter((c) => c.status !== "Resolved").length}
+                  </strong>
+                </div>
+              </div>
+              <div className="section-heading">
+                <h2>A little help goes a long way.</h2>
+              </div>
+              <div className="quick-grid">
+                {[
+                  [
+                    "Understand a document",
+                    "Read a wage slip, notice or payment screenshot.",
+                    "documents",
+                  ],
+                  [
+                    "Find support for you",
+                    "Match your details to official welfare schemes.",
+                    "schemes",
+                  ],
+                  [
+                    "Keep your earnings clear",
+                    "Record income and expenses as you go.",
+                    "earnings",
+                  ],
+                ].map(([title, text, target]) => (
+                  <button
+                    className="panel quick-card"
+                    key={title}
+                    onClick={() => go(target as View)}
+                  >
+                    <span className="icon-tile">
+                      <ArrowRight />
+                    </span>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </button>
+                ))}
+              </div>
+              <section className="panel">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">A MOMENT FOR YOU</span>
+                    <h2>How was your workday?</h2>
+                  </div>
+                  <span className="small muted">{today}</span>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    update((w) => ({
+                      ...w,
+                      dailyChecks: [
+                        {
+                          id: today,
+                          date: today,
+                          earned: summarize(w.entries, today, today).income,
+                          expenses: summarize(w.entries, today, today).expenses,
+                          fatigue,
+                          safe,
+                          missedPayment: Number(missed) || 0,
+                          note: "",
+                        },
+                        ...w.dailyChecks.filter((c) => c.date !== today),
+                      ],
+                    }));
+                    setMessage("Today’s check-in saved.");
+                  }}
+                >
+                  <div className="form-grid three">
+                    <label>
+                      Energy level
+                      <select
+                        value={fatigue}
+                        onChange={(e) => setFatigue(Number(e.target.value))}
+                      >
+                        <option value={1}>Feeling fresh</option>
+                        <option value={2}>Doing okay</option>
+                        <option value={3}>A little tired</option>
+                        <option value={4}>Very tired</option>
+                        <option value={5}>Need a break</option>
+                      </select>
+                    </label>
+                    <label>
+                      Any payment still missing? (₹)
+                      <input
+                        type="number"
+                        min="0"
+                        max="10000000"
+                        value={missed}
+                        onChange={(e) => setMissed(e.target.value)}
+                        placeholder="0"
+                      />
+                    </label>
+                    <label className="check-row">
+                      <input
+                        type="checkbox"
+                        checked={safe}
+                        onChange={(e) => setSafe(e.target.checked)}
+                      />
+                      I felt safe at work today
+                    </label>
+                  </div>
+                  {fatigue >= 4 && (
+                    <p className="notice">
+                      Take a break in a safe place before driving or continuing
+                      strenuous work.
+                    </p>
+                  )}
+                  {!safe && (
+                    <p className="notice">
+                      If you’re in immediate danger, call{" "}
+                      <a href="tel:112">112</a>. Saathi cannot dispatch help.
+                    </p>
+                  )}
+                  <div className="row wrap">
+                    <button className="button primary">
+                      Save daily check-in
+                    </button>
+                    {Number(missed) > 0 && (
+                      <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() =>
+                          start(
+                            `My payment of ₹${missed} has not arrived. Help me follow up.`,
+                          )
+                        }
+                      >
+                        Get help with this payment
+                        <ArrowRight size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {message && <p role="status">{message}</p>}
+                </form>
+              </section>
+              {data.cases
+                .filter(
+                  (c) =>
+                    c.followUp &&
+                    c.followUp <= today &&
+                    c.status !== "Resolved",
+                )
+                .map((c) => (
+                  <button
+                    className="panel reminder"
+                    key={c.id}
+                    onClick={() => start("", c)}
+                  >
+                    Follow-up due: {c.title}
+                    <ArrowRight size={18} />
+                  </button>
+                ))}
+            </>
+          )}
+          {(view === "assistant" || view === "documents") && (
+            <>
+              <div className="page-heading">
+                <span className="eyebrow">YOUR PERSONAL ACTION COMPANION</span>
+                <h1>
+                  {view === "documents"
+                    ? "Paperwork, made simpler."
+                    : "One concern. A clear next step."}
+                </h1>
+                <p>
+                  Ask in {language[1]}. Review the facts. Leave with something
+                  useful.
+                </p>
+              </div>
+              <CaseAssistant
+                key={`${view}-${caseKey}`}
+                language={language[1]}
+                lowData={data.lowData}
+                onSave={save}
+                initial={view === "assistant" ? activeCase : undefined}
+                seed={seed}
+                documentFirst={view === "documents"}
+              />
+            </>
+          )}
+          {view === "schemes" && (
+            <SchemeMatcher
+              language={language[1]}
+              state={data.profile.state}
+              role={data.profile.role}
+            />
+          )}
+          {view === "earnings" && (
+            <>
+              <div className="page-heading">
+                <span className="eyebrow">EVERY RUPEE, A LITTLE CLEARER</span>
+                <h1>Your work. Your records.</h1>
+                <p>Saved on your device and synced to your account.</p>
+              </div>
+              <div className="metric-grid">
+                <div className="panel">
+                  <span>Income</span>
+                  <strong>{money(totals.income)}</strong>
+                </div>
+                <div className="panel">
+                  <span>Expenses</span>
+                  <strong>{money(totals.expenses)}</strong>
+                </div>
+                <div className="panel">
+                  <span>Take-home</span>
+                  <strong>{money(totals.net)}</strong>
+                </div>
+              </div>
+              <section className="panel">
+                <h2>Add a record</h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    update((w) => ({
+                      ...w,
+                      entries: [
+                        {
+                          id: crypto.randomUUID(),
+                          date,
+                          kind,
+                          amount: Number(amount),
+                          note,
+                        },
+                        ...w.entries,
+                      ],
+                    }));
+                    setAmount("");
+                    setNote("");
+                  }}
+                >
+                  <div className="form-grid">
+                    <label>
+                      Type
+                      <select
+                        value={kind}
+                        onChange={(e) => setKind(e.target.value as typeof kind)}
+                      >
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                      </select>
+                    </label>
+                    <label>
+                      Amount (₹)
+                      <input
+                        required
+                        type="number"
+                        min="0.01"
+                        max="10000000"
+                        step="0.01"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Date
+                      <input
+                        required
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Note
+                      <input
+                        value={note}
+                        maxLength={300}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Deliveries, fuel, lunch…"
+                      />
+                    </label>
+                  </div>
+                  <button className="button primary">
+                    <Plus size={17} />
+                    Save entry
+                  </button>
+                </form>
+              </section>
+              <section className="panel">
+                <div className="section-heading">
+                  <h2>Your transactions</h2>
+                  <button
+                    className="text-button"
+                    onClick={() =>
+                      downloadBlob(
+                        "saathi-earnings.csv",
+                        new Blob([csvExport(data.entries)], {
+                          type: "text/csv;charset=utf-8",
+                        }),
+                      )
+                    }
+                  >
+                    <Download size={17} />
+                    Export CSV
+                  </button>
+                </div>
+                {!data.entries.length && (
+                  <p className="empty-state">
+                    Your first record starts here. Add today’s income above.
+                  </p>
+                )}
+                {data.entries.map((entry) => (
+                  <div className="record" key={entry.id}>
+                    <span>
+                      <strong>{entry.note || entry.kind}</strong>
+                      <small>{entry.date}</small>
+                    </span>
+                    <strong
+                      className={entry.kind === "income" ? "positive-text" : ""}
+                    >
+                      {entry.kind === "income" ? "+" : "−"}
+                      {money(entry.amount)}
+                    </strong>
+                    <button
+                      className="icon-button"
+                      aria-label={`Delete ${entry.note || entry.kind}`}
+                      onClick={() =>
+                        update((w) => ({
+                          ...w,
+                          entries: w.entries.filter((v) => v.id !== entry.id),
+                        }))
+                      }
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                ))}
+              </section>
+            </>
+          )}
+          {view === "cases" && (
+            <>
+              <div className="page-heading">
+                <span className="eyebrow">YOUR VOICE, ON RECORD</span>
+                <h1>Every concern deserves follow-through.</h1>
+                <p>Review, download and track the complaints you’ve saved.</p>
+              </div>
+              <button className="button primary" onClick={() => start()}>
+                <Plus size={17} />
+                Start a new case
+              </button>
+              <div className="scheme-grid">
+                {data.cases.map((c) => (
+                  <article className="panel" key={c.id}>
+                    <span className="status-badge">{c.status}</span>
+                    <h2>{c.title}</h2>
+                    <p>{c.english.slice(0, 150)}…</p>
+                    {c.followUp && (
+                      <p className="small">Follow-up: {c.followUp}</p>
+                    )}
+                    <button
+                      className="text-button"
+                      onClick={() => start("", c)}
+                    >
+                      Open package
+                      <ArrowRight size={17} />
+                    </button>
+                    <button
+                      className="icon-button"
+                      aria-label={`Delete case ${c.title}`}
+                      onClick={() =>
+                        update((w) => ({
+                          ...w,
+                          cases: w.cases.filter((v) => v.id !== c.id),
+                        }))
+                      }
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </article>
+                ))}
+              </div>
+              {!data.cases.length && (
+                <div className="panel empty-state">
+                  <FileText size={32} />
+                  <h2>Your next step, saved here.</h2>
+                  <p>
+                    Ask Saathi for help, create a complaint package, then save
+                    it to your workspace.
+                  </p>
+                </div>
+              )}
+              {data.drafts.map((d) => (
+                <details className="panel" key={d.id}>
+                  <summary>{d.title} · Previous draft</summary>
+                  <p className="answer-text">{d.text}</p>
+                </details>
+              ))}
+            </>
+          )}
+          {view === "safety" && (
+            <>
+              <div className="page-heading">
+                <span className="eyebrow">
+                  YOU MATTER MORE THAN THE NEXT TASK
+                </span>
+                <h1>A safer, steadier workday.</h1>
+                <p>Practical reminders you can keep with you, even offline.</p>
+              </div>
+              <div className="panel emergency">
+                <h2>In immediate danger?</h2>
+                <p>
+                  Move to a safer place if you can. Call India’s emergency
+                  response number. This app cannot contact emergency services
+                  for you.
+                </p>
+                <a className="button primary" href="tel:112">
+                  Call 112
+                </a>
+                <a
+                  className="text-button"
+                  href="https://112.gov.in/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Official emergency information ↗
+                </a>
+              </div>
+              <div className="panel">
+                <h2>Before your next shift</h2>
+                {[
+                  "Check your phone battery and emergency contacts",
+                  "Inspect your vehicle and use protective equipment",
+                  "Carry drinking water and plan rest breaks",
+                  "Tell someone you trust where you are working",
+                  "Save payment and shift records",
+                ].map((item) => (
+                  <label className="check-row" key={item}>
+                    <input
+                      type="checkbox"
+                      checked={data.checks.includes(item)}
+                      onChange={() =>
+                        update((w) => ({
+                          ...w,
+                          checks: w.checks.includes(item)
+                            ? w.checks.filter((v) => v !== item)
+                            : [...w.checks, item],
+                        }))
+                      }
+                    />
+                    {item}
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+          <footer className="workspace-footer">
+            Made for your everyday work. · AI guidance can be mistaken. Review
+            important facts and official sources.
+          </footer>
+        </main>
+      </div>
+    </div>
+  );
 }

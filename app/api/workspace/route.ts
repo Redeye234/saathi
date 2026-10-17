@@ -1,100 +1,95 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { localSession } from "../../../lib/local-auth.mjs";
 import { getDb } from "../../../db";
 import { workerWorkspaces } from "../../../db/schema";
-
+import { cleanWorkspace } from "../../../lib/contracts.mjs";
+import { json, readJson, sameOrigin } from "../../../lib/http.mjs";
 export const dynamic = "force-dynamic";
 
-const MAX_PAYLOAD_BYTES = 240_000;
-const json = (data: unknown, status = 200) =>
-  Response.json(data, {
-    status,
-    headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
-  });
-
-function errorMessage(error: unknown) {
-  const message = error instanceof Error ? error.message : "Database request failed";
-  if (message.includes("no such table") || message.includes("worker_workspaces")) {
-    return "The worker workspace table is not ready yet. Deploy the latest migration and try again.";
-  }
-  return "The workspace could not be saved right now. Your local copy is still available.";
-}
-
-async function currentUser(request: Request) {
-  return localSession(request);
-}
-
 export async function GET(request: Request) {
-  const user = await currentUser(request);
+  const user = await localSession(request);
   if (!user) return json({ error: "Sign in to sync your workspace." }, 401);
-
   try {
-    const db = getDb();
-    const [row] = await db
+    const [row] = await getDb()
       .select()
       .from(workerWorkspaces)
       .where(eq(workerWorkspaces.userId, user.userId))
       .limit(1);
-    let data: Record<string, unknown> = {};
-    if (row?.data) {
-      try {
-        const parsed = JSON.parse(row.data);
-        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) data = parsed;
-      } catch {
-        data = {};
-      }
-    }
     return json({
-      data,
+      data: cleanWorkspace(row ? JSON.parse(row.data) : {}),
       syncedAt: row?.updatedAt ?? null,
-      user: { userId: user.userId, email: user.email, displayName: user.displayName },
+      user,
     });
-  } catch (error) {
-    return json({ error: errorMessage(error) }, 503);
+  } catch {
+    return json(
+      { error: "Your saved workspace is temporarily unavailable." },
+      503,
+    );
   }
 }
 
 export async function POST(request: Request) {
-  const user = await currentUser(request);
+  if (!sameOrigin(request))
+    return json({ error: "This request must come from Saathi." }, 403);
+  const user = await localSession(request);
   if (!user) return json({ error: "Sign in to sync your workspace." }, 401);
-  if (!request.headers.get("content-type")?.includes("application/json")) {
-    return json({ error: "Send workspace data as JSON." }, 415);
-  }
-
+  if (!request.headers.get("content-type")?.includes("application/json"))
+    return json({ error: "Send JSON." }, 415);
+  let data, revision;
   try {
-    const raw = await request.text();
-    if (raw.length > MAX_PAYLOAD_BYTES) return json({ error: "Your workspace is too large to sync." }, 413);
-    const payload = JSON.parse(raw);
-    const data = payload?.data;
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
-      return json({ error: "Workspace data is invalid." }, 400);
-    }
-    const serialized = JSON.stringify(data);
-    if (serialized.length > MAX_PAYLOAD_BYTES) return json({ error: "Your workspace is too large to sync." }, 413);
-
+    const payload = await readJson(request, 450000);
+    data = cleanWorkspace(payload.data);
+    revision = payload.revision;
+    if (revision !== null && typeof revision !== "string")
+      return json({ error: "Reload your workspace before saving." }, 400);
+  } catch (e) {
+    return json(
+      { error: e instanceof Error ? e.message : "Invalid workspace." },
+      e instanceof RangeError ? 413 : 400,
+    );
+  }
+  try {
     const db = getDb();
     const timestamp = new Date().toISOString();
-    await db
-      .insert(workerWorkspaces)
-      .values({
-        userId: user.userId,
-        email: user.email,
-        displayName: user.displayName,
-        data: serialized,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      })
-      .onConflictDoUpdate({
-        target: workerWorkspaces.userId,
-        set: {
-          email: user.email,
-          displayName: user.displayName,
-          data: serialized,
-          updatedAt: timestamp,
+    const fields = {
+      email: user.email,
+      displayName: user.displayName,
+      data: JSON.stringify(data),
+      updatedAt: timestamp,
+    };
+    const updated =
+      revision === null
+        ? await db
+            .insert(workerWorkspaces)
+            .values({ ...fields, userId: user.userId, createdAt: timestamp })
+            .onConflictDoNothing()
+            .returning({ id: workerWorkspaces.userId })
+        : await db
+            .update(workerWorkspaces)
+            .set(fields)
+            .where(
+              and(
+                eq(workerWorkspaces.userId, user.userId),
+                eq(workerWorkspaces.updatedAt, revision),
+              ),
+            )
+            .returning({ id: workerWorkspaces.userId });
+    if (!updated.length)
+      return json(
+        {
+          error:
+            "Your account changed on another device. Choose which copy to keep.",
         },
-      });
+        409,
+      );
     return json({ ok: true, syncedAt: timestamp });
-  } catch (error) {
-    return json({ error: errorMessage(error) }, 503);
+  } catch {
+    return json(
+      {
+        error:
+          "Cloud save is unavailable. Your device copy is still available.",
+      },
+      503,
+    );
   }
 }
